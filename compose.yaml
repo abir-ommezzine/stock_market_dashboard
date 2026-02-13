@@ -1,0 +1,60 @@
+services:
+  # Database Service
+  db:
+    image: postgres:15-alpine
+    container_name: stock_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: stock_market
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Spring Boot Service (IntelliJ)
+  java-api:
+    build: ./backend
+    container_name: java_backend
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/stock_market
+      - SPRING_DATASOURCE_USERNAME=user
+      - SPRING_DATASOURCE_PASSWORD=password
+    networks:
+      - app-network
+
+  # FastAPI Service (PyCharm)
+  python-api:
+    build: ./fast-api
+    container_name: python_fastapi
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/stock_market
+    networks:
+      - app-network
+
+  # React Frontend (VS Code)
+  frontend:
+    build: ./frontend
+    container_name: react_frontend
+    ports:
+      - "5173:80" # Maps local port 5173 to Nginx port 80
+    depends_on:
+      - java-api
+      - python-api
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
