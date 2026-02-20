@@ -5,7 +5,6 @@ import com.stockproject.experiment_service.service.DatasetService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -41,6 +40,19 @@ public class DatasetController {
         );
     }
 
+    @Operation(summary = "Register an external API as a dataset")
+    @PostMapping("/link-api")
+    public ResponseEntity<Dataset> linkApiDataset(
+            @RequestParam String apiUrl,
+            @RequestParam String displayName,
+            @RequestParam Long userId) {
+        
+        return ResponseEntity.ok(
+                datasetService.registerApiDataset(apiUrl, displayName, userId)
+        );
+    }
+
+    @Operation(summary = "Get all datasets for a specific user")
     @GetMapping("/{userId}")
     public ResponseEntity<List<Dataset>> getUserDatasets(@PathVariable Long userId) {
         return ResponseEntity.ok(datasetService.getUserDatasets(userId));
