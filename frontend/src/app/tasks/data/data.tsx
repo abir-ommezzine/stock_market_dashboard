@@ -4,8 +4,14 @@ import {
   Clock,
   PlayCircle,
 } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
+export type Option = {
+  label : string
+  value : string
+  icon?: LucideIcon
+}
 
-export const categories = [
+export const categories : Option[] = [
   {
     value: "bug",
     label: "Bug",
@@ -28,7 +34,7 @@ export const categories = [
   },
 ]
 
-export const statuses = [
+export const statuses : Option[] = [
   {
     value: "pending",
     label: "Pending",
@@ -51,7 +57,7 @@ export const statuses = [
   },
 ]
 
-export const priorities = [
+export const priorities : Option[]= [
   {
     label: "Minor",
     value: "minor"
