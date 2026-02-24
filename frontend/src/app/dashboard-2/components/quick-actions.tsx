@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-import { NewPredictionDialog } from "@/features/prediction/new_prediction_dialog"
+import { NewPredictionDialog } from "@/features/prediction/dialogs/new_prediction_dialog"
 
 export function QuickActions() {
   const [open, setOpen] = useState(false)

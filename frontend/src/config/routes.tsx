@@ -1,6 +1,8 @@
 import { lazy } from 'react'
 import { Navigate } from 'react-router-dom'
-
+const HistoricalPricesPage = lazy(
+  () => import("@/features/prediction/pages/historical_prices_page")
+)
 // Lazy load components for better performance
 const Landing = lazy(() => import('@/app/landing/page'))
 const Dashboard = lazy(() => import('@/app/dashboard/page'))
@@ -191,5 +193,9 @@ export const routes: RouteConfig[] = [
   {
     path: "*",
     element: <NotFound />
-  }
+  },
+  {
+  path: "/prediction/historical",
+  element: <HistoricalPricesPage />
+},
 ]

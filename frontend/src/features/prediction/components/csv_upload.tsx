@@ -2,9 +2,10 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import type { Dataset } from "../types"
 
 interface Props {
-  onSuccess?: (dataset: any) => void
+  onSuccess?: (dataset: Dataset) => void
   userId?: number // Pass this from your auth context
 }
 

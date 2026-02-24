@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useNavigate } from "react-router-dom"
 
 interface Props {
   dataInput: any
@@ -12,13 +13,15 @@ interface Props {
 export function CompanySelection({ dataInput, onBack }: Props) {
 
   const [company, setCompany] = useState("")
-
+  const navigate = useNavigate()
   const handleSubmit = () => {
-    console.log("DATA INPUT:", dataInput)
-    console.log("COMPANY:", company)
-
-    // next step later → timeframe selection
-  }
+  navigate("/prediction/historical", {
+    state: {
+      company: company,
+      source: dataInput,
+    },
+  })
+}
 
   return (
     <div className="space-y-4 mt-4">

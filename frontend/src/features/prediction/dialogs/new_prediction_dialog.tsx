@@ -11,10 +11,10 @@ import {
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 
-import { DatasourceForm } from "./datasource_form"
-import { CsvUpload } from "./csv_upload"
-import { CompanySelection } from "./company_selection"
-
+import { DatasourceForm } from "../components/datasource_form"
+import { CsvUpload } from "../components/csv_upload"
+import { CompanySelection } from "../components/company_selection"
+import type { Dataset } from "../types"
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -69,8 +69,8 @@ export function NewPredictionDialog({ open, onOpenChange }: Props) {
 
             <TabsContent value="csv">
               <CsvUpload
-                onNext={(file) => {
-                  setDataInput(file)
+                onSuccess={(dataset:Dataset) => {
+                  setDataInput(dataset)
                   setStep(2)
                 }}
               />
