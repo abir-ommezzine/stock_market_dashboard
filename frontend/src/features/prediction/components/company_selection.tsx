@@ -18,7 +18,7 @@ export function CompanySelection({ dataInput, onBack }: Props) {
   navigate("/prediction/historical", {
     state: {
       company: company,
-      source: dataInput,
+      datasetId: dataInput.id,
     },
   })
 }

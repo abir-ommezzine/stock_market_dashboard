@@ -1,13 +1,28 @@
 "use client"
 
 import { useLocation } from "react-router-dom"
-import{ ChartAreaInteractive } from "@/app/dashboard/components/chart-area-interactive"
+import { useEffect, useState } from "react"
+import { fetchStockData } from "@/lib/api/stock.api"
+
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { ChartAreaInteractive } from "@/app/dashboard/components/chart-area-interactive"
 
 export default function HistoricalPricesPage() {
+
   const location = useLocation()
 
-  const { company, source } = location.state || {}
+  const { company, datasetId } = location.state || {}
+
+  const [data, setData] = useState<any>(null)
+
+  useEffect(() => {
+
+    if (!datasetId || !company) return
+
+    fetchStockData(datasetId, company)
+      .then(setData)
+
+  }, [datasetId, company])
 
   return (
     <div className="p-6 space-y-6">
@@ -15,20 +30,16 @@ export default function HistoricalPricesPage() {
       <Card>
         <CardHeader>
           <CardTitle>
-            Historical Stock Prices — {company ?? "Demo Company"}
+            Historical Prices — {company}
           </CardTitle>
         </CardHeader>
 
         <CardContent>
-          Source:
-          {" "}
-          {typeof source === "string"
-            ? source
-            : source?.datasource || "Mock datasource"}
+          Dataset ID: {datasetId}
         </CardContent>
       </Card>
 
-      <ChartAreaInteractive />
+      <ChartAreaInteractive data={data} />
 
     </div>
   )

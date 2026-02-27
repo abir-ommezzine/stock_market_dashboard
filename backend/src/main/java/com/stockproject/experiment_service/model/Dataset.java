@@ -23,6 +23,8 @@ public class Dataset {
     @Column(nullable = true) // Stores the URL for external API datasets
     private String apiUrl;
 
+    private String sourceName;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private SourceType sourceType;
@@ -58,6 +60,9 @@ public class Dataset {
 
     public String getFileName() { return fileName; }
     public void setFileName(String fileName) { this.fileName = fileName; }
+
+    public String getSourceName() { return sourceName; }
+    public void setSourceName(String name) { this.sourceName = name; }
 
     public String getFilePath() { return filePath; }
     public void setFilePath(String filePath) { this.filePath = filePath; }

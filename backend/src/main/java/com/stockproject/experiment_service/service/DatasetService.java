@@ -30,6 +30,7 @@ public class DatasetService {
         // 2. Create the record (The constructor we updated in the Model)
         Dataset dataset = new Dataset(userId, file.getOriginalFilename(), filePath);
         dataset.setSourceType(SourceType.FILE);
+        dataset.setSourceName("csv");
         
         // 3. Save to DB
         return datasetRepository.save(dataset);
@@ -46,8 +47,18 @@ public class DatasetService {
         dataset.setFileName(displayName); // User provides a name for this API source
         dataset.setApiUrl(apiUrl);
         dataset.setSourceType(SourceType.API);
+        dataset.setSourceName("api");
         
         // 2. Save to DB (No file storage needed)
+        return datasetRepository.save(dataset);
+    }
+
+    public Dataset registerPredefinedSource(String sourceName,String displayName,Long userId){
+        Dataset dataset = new Dataset();
+        dataset.setUserId(userId);
+        dataset.setFileName(displayName);
+        dataset.setSourceType(SourceType.PREDEFINED);
+        dataset.setSourceName(sourceName);
         return datasetRepository.save(dataset);
     }
 

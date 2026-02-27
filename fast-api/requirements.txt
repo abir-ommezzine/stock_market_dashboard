@@ -1,4 +1,7 @@
 fastapi
 uvicorn
-SQLAlchemy
+pandas
+yfinance
+sqlalchemy
 psycopg2-binary
+requests
