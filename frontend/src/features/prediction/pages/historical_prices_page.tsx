@@ -16,13 +16,16 @@ export default function HistoricalPricesPage() {
   const [data, setData] = useState<any>(null)
 
   useEffect(() => {
+  if (!datasetId || !company) {
+    console.warn("Missing company or datasetId in location.state")
+    return
+  }
 
-    if (!datasetId || !company) return
+  fetchStockData(datasetId, company)
+    .then(setData)
+    .catch(err => console.error("Error fetching stock data", err))
 
-    fetchStockData(datasetId, company)
-      .then(setData)
-
-  }, [datasetId, company])
+}, [datasetId, company])
 
   return (
     <div className="p-6 space-y-6">

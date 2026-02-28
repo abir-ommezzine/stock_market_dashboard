@@ -1,8 +1,12 @@
 package com.stockproject.experiment_service.model;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import lombok.Getter;
+import lombok.Setter;
 
+import java.time.LocalDateTime;
+@Getter
+@Setter
 @Entity
 @Table(name = "datasets")
 public class Dataset {
@@ -12,7 +16,7 @@ public class Dataset {
     private Long id;
 
     @Column(nullable = false)
-    private Long userId;
+    private Long userId=0L;
 
     @Column(nullable = false)
     private String fileName; // Display name for the dataset
@@ -22,8 +26,6 @@ public class Dataset {
 
     @Column(nullable = true) // Stores the URL for external API datasets
     private String apiUrl;
-
-    private String sourceName;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -47,7 +49,7 @@ public class Dataset {
         this.userId = userId;
         this.fileName = fileName;
         this.apiUrl = apiUrl;
-        this.sourceType = SourceType.API;
+        this.sourceType = SourceType.URL;
         this.createdAt = LocalDateTime.now();
     }
 
@@ -60,9 +62,6 @@ public class Dataset {
 
     public String getFileName() { return fileName; }
     public void setFileName(String fileName) { this.fileName = fileName; }
-
-    public String getSourceName() { return sourceName; }
-    public void setSourceName(String name) { this.sourceName = name; }
 
     public String getFilePath() { return filePath; }
     public void setFilePath(String filePath) { this.filePath = filePath; }

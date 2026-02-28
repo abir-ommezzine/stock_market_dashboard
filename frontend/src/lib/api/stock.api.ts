@@ -1,10 +1,10 @@
-const API = "http://localhost:8080"
+const API = "http://localhost:8080/api";
 
 export async function fetchStockData(
   datasetId: number,
   symbol: string
 ) {
-  const res = await fetch(`${API}/api/stocks/fetch`, {
+  const res = await fetch(`${API}/stocks/fetch`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

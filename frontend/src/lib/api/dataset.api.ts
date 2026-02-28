@@ -5,20 +5,25 @@ export async function getSources() {
   return res.json()
 }
 
-export async function createPredefinedDataset(
+export const createPredefinedDataset = async (
   sourceName: string,
-  userId: number
-) {
+  userId?: number
+) => {
+
+  const params = new URLSearchParams()
+  params.append("sourceName", sourceName)
+  params.append("displayName", sourceName)
+
+  if (userId !== undefined) {
+    params.append("userId", userId.toString())
+  }
+
   const res = await fetch(
-    `${API}/api/datasets/link-source?sourceName=${sourceName}&displayName=${sourceName}&userId=${userId}`,
-    {
-      method: "POST",
-    }
+    `${API}/api/datasets/link-source?${params.toString()}`,
+    { method: "POST" }
   )
 
-  if (!res.ok) {
-    throw new Error("Failed to create dataset")
-  }
+  if (!res.ok) throw new Error("Failed to create dataset")
 
   return res.json()
 }

@@ -50,11 +50,11 @@ export function ChartAreaInteractive({data}: Props) {
   const isMobile = useIsMobile()
   const [timeRange, setTimeRange] = React.useState("90d")
   const chartData = React.useMemo(() => {
-  if (!data?.Close) return []
+  if (!data || !Array.isArray(data)) return []
 
-  return Object.entries(data.Close).map(([date, value]) => ({
-    date,
-    close: value,
+  return data.map((p: any) => ({
+    date: p.date,
+    close: p.close,
   }))
 }, [data])
   React.useEffect(() => {
