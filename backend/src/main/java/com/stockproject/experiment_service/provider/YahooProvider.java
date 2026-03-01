@@ -4,8 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stockproject.experiment_service.model.SourceType;
 import com.stockproject.experiment_service.model.StockPrice;
-import com.stockproject.experiment_service.provider.DataSourceProvider;
 
+// --- Added new Spring HTTP imports ---
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -27,22 +31,34 @@ public class YahooProvider implements DataSourceProvider {
     }
 
     @Override
-    public List<StockPrice> load(Map<String,String> params){
+    public List<StockPrice> load(Map<String,Object> params){
 
-        String symbol = params.get("symbol");
+        Object symObj = params.get("symbol");
+        if(symObj == null || symObj.toString().isEmpty()) {
+            throw new IllegalArgumentException("Parameter 'symbol' is required");
+        }
+        String symbol = symObj.toString();
 
         String url =
                 "https://query1.finance.yahoo.com/v8/finance/chart/"
                         + symbol + "?range=1y&interval=1d";
 
-        String response =
-                restTemplate.getForObject(url,String.class);
+        // --- THE FIX: Add a User-Agent header to spoof a real browser ---
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36");
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        // Use exchange() instead of getForObject() to pass the headers
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+        String responseBody = response.getBody();
+        // ----------------------------------------------------------------
 
         List<StockPrice> prices = new ArrayList<>();
 
         try{
 
-            JsonNode root = mapper.readTree(response);
+            JsonNode root = mapper.readTree(responseBody);
 
             JsonNode result =
                     root.path("chart")
@@ -78,7 +94,7 @@ public class YahooProvider implements DataSourceProvider {
             }
 
         }catch(Exception e){
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed parsing Yahoo Data: " + e.getMessage(), e);
         }
 
         return prices;

@@ -23,7 +23,20 @@ export function DatasourceForm({ onNext }: Props) {
   const userId = 1
 
   useEffect(() => {
-    getSources().then(setSources)
+    getSources()
+      .then((data) => {
+        // Double-check that we actually received an array before setting it
+        if (Array.isArray(data)) {
+          setSources(data)
+        } else {
+          console.error("API returned non-array data:", data)
+          setSources([]) // Fallback to an empty array so .map() doesn't crash
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to fetch sources:", err)
+        setSources([]) // Fallback to an empty array if the network request fails
+      })
   }, [])
 
   const handleContinue = async () => {

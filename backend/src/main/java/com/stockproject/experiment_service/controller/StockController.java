@@ -11,6 +11,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/stocks")
+@CrossOrigin(origins = "http://localhost:5173")
 public class StockController {
 
     private final DatasetRepository datasetRepository;
@@ -30,14 +31,26 @@ public class StockController {
         Dataset dataset =
                 datasetRepository.findById(req.getDatasetId())
                         .orElseThrow();
-
+        if (dataset.getSourceType() == null) {
+            throw new RuntimeException("Dataset sourceType is null for dataset " + dataset.getId());
+        }
         DataSourceProvider provider =
                 providerFactory.get(dataset.getSourceType());
+        Map<String, Object> params = new java.util.HashMap<>();
 
-        return provider.load(Map.of(
-                "symbol", req.getSymbol(),
-                "url", dataset.getApiUrl(),
-                "path", dataset.getFilePath()
-        ));
+        params.put("symbol", req.getSymbol());
+        params.put("url", dataset.getApiUrl());
+        params.put("path", dataset.getFilePath());
+        System.out.println("REQ SYMBOL = " + req.getSymbol());
+        System.out.println("DATASET API URL = " + dataset.getApiUrl());
+        System.out.println("DATASET FILE PATH = " + dataset.getFilePath());
+        System.out.println("DATASET SOURCE TYPE = " + dataset.getSourceType());
+        try {
+            System.out.println("PARAMS: " + params);
+            return provider.load(params);
+        } catch (Exception e) {
+            e.printStackTrace();  // <- this will show the real exception in console/logs
+            throw new RuntimeException("Failed fetching stock data: " + e.getMessage());
+        }
     }
 }

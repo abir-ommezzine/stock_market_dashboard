@@ -21,6 +21,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/datasets")
+@CrossOrigin(origins = "http://localhost:5173")
 public class DatasetController {
 
     private final DatasetService datasetService;
@@ -69,6 +70,18 @@ public class DatasetController {
                 datasetService.registerApiDataset(sourceName, displayName, uid)
         );
     }
+    @Operation(summary = "Link an external CSV via URL")
+    @PostMapping("/link-url")
+    public ResponseEntity<Dataset> linkUrlDataset(@RequestBody Map<String, Object> payload) {
+        String url = (String) payload.get("url");
+        Long userId = payload.containsKey("userId") ? Long.valueOf(payload.get("userId").toString()) : 0L;
+
+        // Create and save the new dataset.
+        // Using "URL Dataset" as a default display name, but you could extract the filename from the URL if preferred.
+        Dataset dataset = new Dataset(userId, "URL Dataset", url, SourceType.URL);
+
+        return ResponseEntity.ok(datasetRepository.save(dataset));
+    }
 
     @Operation(summary = "Get all datasets for a specific user")
     @GetMapping("/{userId}")
@@ -79,7 +92,7 @@ public class DatasetController {
     @PostMapping("/load")
     public ResponseEntity<?> loadDataset(
             @RequestParam SourceType sourceType,
-            @RequestParam Map<String,String> params
+            @RequestParam Map<String,Object> params
     ){
         return ResponseEntity.ok(
                 datasetService.loadFromSource(sourceType, params)

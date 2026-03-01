@@ -10,5 +10,5 @@ public interface DataSourceProvider {
 
     SourceType getType();
 
-    List<StockPrice> load(Map<String, String> params);
+    List<StockPrice> load(Map<String, Object> params);
 }

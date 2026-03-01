@@ -35,7 +35,7 @@ public class DatasetService {
      */
     public Dataset loadFromSource(
             SourceType type,
-            Map<String,String> params){
+            Map<String,Object> params){
 
         DataSourceProvider provider = factory.get(type);
 
@@ -75,7 +75,7 @@ public class DatasetService {
         dataset.setUserId(userId);
         dataset.setFileName(displayName); // User provides a name for this API source
         dataset.setSourceType(sourceType);
-        dataset.setSourceType(SourceType.URL);
+
 
         // 2. Save to DB (No file storage needed)
         return datasetRepository.save(dataset);

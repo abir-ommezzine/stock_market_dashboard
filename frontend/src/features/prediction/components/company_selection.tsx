@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -18,12 +18,22 @@ interface Props {
 }
 
 export function CompanySelection({ dataInput, onBack }: Props) {
-
   const [company, setCompany] = useState("")
+  const [symbols, setSymbols] = useState<string[]>([])
+  const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
 
-  // Example list of symbols for dropdown
-  const symbols = ["AAPL", "TSLA", "GOOGL", "MSFT", "AMZN"]
+  // Fetch symbols dynamically when the component loads
+  useEffect(() => {
+    if (dataInput?.id) {
+      setIsLoading(true)
+      fetch(`http://localhost:8080/api/datasets/${dataInput.id}/symbols`)
+        .then((res) => res.json())
+        .then((data) => setSymbols(data))
+        .catch((err) => console.error("Failed to fetch symbols", err))
+        .finally(() => setIsLoading(false))
+    }
+  }, [dataInput])
 
   const handleSubmit = () => {
     navigate("/prediction/historical", {
@@ -36,39 +46,41 @@ export function CompanySelection({ dataInput, onBack }: Props) {
 
   return (
     <div className="space-y-4 mt-4">
-
-      {/* Input + Select for company */}
       <div className="space-y-2">
         <Input
-          placeholder="Type a company symbol"
+          placeholder="Type a company symbol (e.g., AAPL)"
           value={company}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompany(e.target.value.toUpperCase())}
         />
 
-        <Select onValueChange={setCompany}>
-          <SelectTrigger>
-            <SelectValue placeholder="Or select a symbol" />
-          </SelectTrigger>
-          <SelectContent>
-            {symbols.map((s) => (
-              <SelectItem key={s} value={s}>
-                {s}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Loading symbols...</p>
+        ) : (
+          symbols.length > 0 && (
+            <Select onValueChange={setCompany}>
+              <SelectTrigger>
+                <SelectValue placeholder="Or select an available symbol" />
+              </SelectTrigger>
+              <SelectContent>
+                {symbols.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )
+        )}
       </div>
 
       <div className="flex justify-between">
         <Button variant="outline" onClick={onBack}>
           Back
         </Button>
-
         <Button disabled={!company} onClick={handleSubmit}>
           Continue
         </Button>
       </div>
-
     </div>
   )
 }

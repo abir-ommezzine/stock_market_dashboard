@@ -20,9 +20,9 @@ public class CsvProvider implements DataSourceProvider {
     }
 
     @Override
-    public List<StockPrice> load(Map<String,String> params){
+    public List<StockPrice> load(Map<String,Object> params){
 
-        String filePath = params.get("filePath");
+        String filePath = String.valueOf(params.get("filePath"));
 
         List<StockPrice> prices = new ArrayList<>();
 

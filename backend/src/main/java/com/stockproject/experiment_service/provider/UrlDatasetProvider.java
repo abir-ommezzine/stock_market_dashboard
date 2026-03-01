@@ -22,9 +22,9 @@ public class UrlDatasetProvider implements DataSourceProvider {
     }
 
     @Override
-    public List<StockPrice> load(Map<String,String> params){
+    public List<StockPrice> load(Map<String,Object> params){
 
-        String url = params.get("url");
+        String url = String.valueOf(params.get("url"));
 
         String csv = restTemplate.getForObject(url,String.class);
 
@@ -33,7 +33,7 @@ public class UrlDatasetProvider implements DataSourceProvider {
         String[] lines = csv.split("\n");
 
         for(int i=1;i<lines.length;i++){
-
+            if (lines[i].trim().isEmpty()) continue;
             String[] cols = lines[i].split(",");
 
             StockPrice p = new StockPrice();
