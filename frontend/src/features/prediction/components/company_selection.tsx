@@ -62,7 +62,8 @@ export function CompanySelection({ dataInput, onBack }: Props) {
                 <SelectValue placeholder="Or select an available symbol" />
               </SelectTrigger>
               <SelectContent>
-                {symbols.map((s) => (
+                {symbols .filter(s => s && s.trim() !== "")
+                .map((s) => (
                   <SelectItem key={s} value={s}>
                     {s}
                   </SelectItem>

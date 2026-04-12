@@ -62,7 +62,24 @@ public class DatasetService {
         dataset.setSourceType(SourceType.FILE);
 
         // 3. Save to DB
-        return datasetRepository.save(dataset);
+        Dataset saved= datasetRepository.save(dataset);
+        // Extract symbol from filename e.g. "apple.csv" → "APPLE"
+        String symbol = file.getOriginalFilename()
+                .replace(".csv", "")
+                .toUpperCase();
+        // Reuse your existing FILE provider to parse the CSV
+        DataSourceProvider provider = factory.get(SourceType.FILE);
+        List<StockPrice> prices = provider.load(Map.of(
+                "path", filePath,
+                "symbol", "",   // will be read from the CSV itself
+                "url", ""
+        ));
+
+        // Link prices to this dataset and save
+        prices.forEach(p -> p.setDatasetId(saved.getId()));
+        stockRepo.saveAll(prices);
+
+        return saved;
     }
 
     /**
@@ -89,6 +106,7 @@ public class DatasetService {
 
         return prices.stream()
                 .map(StockPrice::getSymbol)
+                .filter(s -> s != null && !s.isBlank())
                 .distinct()
                 .sorted()
                 .toList();

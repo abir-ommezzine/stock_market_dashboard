@@ -1,7 +1,7 @@
 fastapi
 uvicorn
 pandas
-yfinance
-sqlalchemy
-psycopg2-binary
-requests
+numpy
+statsmodels
+scikit-learn
+python-multipart

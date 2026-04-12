@@ -1,7 +1,10 @@
 const API = "http://localhost:8080"
 
 export async function getSources() {
-  const res = await fetch(`${API}/api/datasets/sources`)
+  const res = await fetch(`${API}/api/datasets/sources`);
+   if (!res.ok) {
+    throw new Error(`HTTP error! status: ${res.status}`);
+  }
   return res.json()
 }
 

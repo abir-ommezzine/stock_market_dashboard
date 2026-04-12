@@ -71,7 +71,7 @@ public class CsvProvider implements DataSourceProvider {
                 try {
 
                     StockPrice p = new StockPrice();
-
+                    p.setSymbol(String.valueOf(params.getOrDefault("symbol", "UNKNOWN")));
                     p.setDate(LocalDate.parse(cols[dateIndex].trim()));
                     p.setOpen(Double.parseDouble(cols[openIndex].trim()));
                     p.setHigh(Double.parseDouble(cols[highIndex].trim()));
