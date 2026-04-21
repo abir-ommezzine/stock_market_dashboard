@@ -1,8 +1,9 @@
 // CHANGES:
-// 1. Split predictions into backtest and future arrays
-// 2. Added third Area for backtest predictions (orange, solid line)
-// 3. Added "backtest" to chartConfig
-// 4. Backtest points overlap the historical period so accuracy is visible
+// 1. Added lower/upper confidence interval bands for future predictions
+// 2. Merged lower/upper into chartData map alongside future values
+// 3. Added ReferenceArea-style confidence band using two overlapping Areas
+// 4. Added "showConfidence" toggle so user can hide/show the band
+// 5. Always include backtest points in filtered data (same as future)
 
 "use client"
 
@@ -19,6 +20,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
 import type { PredictionPoint } from "@/lib/api/prediction.api"
 
 interface Props {
@@ -26,7 +29,6 @@ interface Props {
   predictions?: PredictionPoint[]
 }
 
-// CHANGED: added backtest series (orange) alongside future (dashed)
 const chartConfig = {
   close: {
     label: "Historical",
@@ -34,11 +36,20 @@ const chartConfig = {
   },
   backtest: {
     label: "Backtest",
-    color: "var(--chart-3)",   // orange — overlaps historical to show accuracy
+    color: "var(--chart-3)",
   },
   future: {
     label: "Forecast",
-    color: "var(--chart-2)",   // second color — dashed, extends beyond history
+    color: "var(--chart-2)",
+  },
+  // NEW: upper/lower bounds for confidence interval — no label in legend
+  upper: {
+    label: "Upper bound",
+    color: "var(--chart-2)",
+  },
+  lower: {
+    label: "Lower bound",
+    color: "var(--chart-2)",
   },
 } satisfies ChartConfig
 
@@ -48,67 +59,68 @@ export function ChartAreaInteractive({ data, predictions }: Props) {
   const isMobile = useIsMobile()
   const [timeRange, setTimeRange] = React.useState("90d")
 
+  // NEW: toggle to show/hide the confidence interval band
+  const [showConfidence, setShowConfidence] = React.useState(true)
+
   React.useEffect(() => {
     if (isMobile) setTimeRange("7d")
   }, [isMobile])
 
-  // Build historical data points
   const historicalData = React.useMemo(() => {
     if (!data || !Array.isArray(data)) return []
     return data.map((p: any) => ({ date: p.date, close: p.close }))
   }, [data])
 
-  // CHANGED: split predictions into backtest and future arrays
-  // backtest points overlap the historical period (last 20%)
-  // future points extend beyond the last historical date
   const { backtestData, futureData } = React.useMemo(() => {
     if (!predictions || predictions.length === 0) {
       return { backtestData: [], futureData: [] }
     }
 
-    // Separate by type field we added to PredictionPoint
     const backtest = predictions
       .filter(p => p.type === "backtest")
       .map(p => ({ date: p.date, backtest: p.value }))
 
+    // CHANGED: also extract lower/upper from future predictions
     const future = predictions
       .filter(p => p.type === "future")
-      .map(p => ({ date: p.date, future: p.value }))
+      .map(p => ({
+        date:    p.date,
+        future:  p.value,
+        lower:   p.lower,   // confidence interval lower bound (may be undefined)
+        upper:   p.upper,   // confidence interval upper bound (may be undefined)
+      }))
 
     return { backtestData: backtest, futureData: future }
   }, [predictions])
 
-  // CHANGED: merge all three datasets into one unified array sorted by date
-  // Each point may have close, backtest, and/or future — undefined means no value
-  // Recharts handles undefined gracefully (gaps in the line)
   const chartData = React.useMemo(() => {
-    // Build a map keyed by date so we can merge all series
     const map = new Map<string, any>()
 
-    // Add historical points
     historicalData.forEach(p => {
       map.set(p.date, { date: p.date, close: p.close })
     })
 
-    // Merge backtest points — same dates as last 20% of historical
     backtestData.forEach(p => {
       const existing = map.get(p.date) || { date: p.date }
       map.set(p.date, { ...existing, backtest: p.backtest })
     })
 
-    // Merge future points — new dates beyond historical
+    // CHANGED: merge lower/upper alongside future values
     futureData.forEach(p => {
       const existing = map.get(p.date) || { date: p.date }
-      map.set(p.date, { ...existing, future: p.future })
+      map.set(p.date, {
+        ...existing,
+        future: p.future,
+        lower:  p.lower,  // undefined if model didn't return confidence intervals
+        upper:  p.upper,
+      })
     })
 
-    // Sort all points chronologically
     return Array.from(map.values()).sort(
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
     )
   }, [historicalData, backtestData, futureData])
 
-  // Filter by time range — always include future points regardless
   const filteredData = React.useMemo(() => {
     if (!chartData.length) return []
     const referenceDate = new Date(historicalData[historicalData.length - 1]?.date)
@@ -120,9 +132,13 @@ export function ChartAreaInteractive({ data, predictions }: Props) {
 
     return chartData.filter(item =>
       new Date(item.date) >= startDate ||
-      item.future !== undefined  // always show future predictions
+      item.future   !== undefined ||  // always show future predictions
+      item.backtest !== undefined      // CHANGED: also always show backtest
     )
   }, [chartData, historicalData, timeRange])
+
+  // Check if any future points actually have confidence intervals
+  const hasConfidenceData = futureData.some(p => p.lower !== undefined && p.upper !== undefined)
 
   return (
     <Card className="@container/card">
@@ -135,6 +151,20 @@ export function ChartAreaInteractive({ data, predictions }: Props) {
           <span className="@[540px]/card:hidden">Historical + Backtest + Forecast</span>
         </CardDescription>
         <CardAction>
+          {/* NEW: confidence interval toggle — only shown if data has CI */}
+          {hasConfidenceData && (
+            <div className="hidden @[540px]/card:flex items-center gap-2 mr-4">
+              <Switch
+                id="confidence-toggle"
+                checked={showConfidence}
+                onCheckedChange={setShowConfidence}
+              />
+              <Label htmlFor="confidence-toggle" className="text-xs text-muted-foreground cursor-pointer">
+                95% CI
+              </Label>
+            </div>
+          )}
+
           <ToggleGroup
             type="single"
             value={timeRange}
@@ -160,22 +190,39 @@ export function ChartAreaInteractive({ data, predictions }: Props) {
       </CardHeader>
 
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+        {/* Mobile confidence toggle */}
+        {hasConfidenceData && (
+          <div className="flex @[540px]/card:hidden items-center gap-2 mb-4">
+            <Switch
+              id="confidence-toggle-mobile"
+              checked={showConfidence}
+              onCheckedChange={setShowConfidence}
+            />
+            <Label htmlFor="confidence-toggle-mobile" className="text-xs text-muted-foreground">
+              Show 95% confidence interval
+            </Label>
+          </div>
+        )}
+
         <ChartContainer config={chartConfig} className="aspect-auto h-[300px] w-full">
           <AreaChart data={filteredData}>
             <defs>
               <linearGradient id="fillClose" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-close)" stopOpacity={1.0} />
-                <stop offset="95%" stopColor="var(--color-close)" stopOpacity={0.1} />
+                <stop offset="5%"  stopColor="var(--color-close)"   stopOpacity={1.0} />
+                <stop offset="95%" stopColor="var(--color-close)"   stopOpacity={0.1} />
               </linearGradient>
-              {/* Orange gradient for backtest overlay */}
               <linearGradient id="fillBacktest" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-backtest)" stopOpacity={0.6} />
+                <stop offset="5%"  stopColor="var(--color-backtest)" stopOpacity={0.6} />
                 <stop offset="95%" stopColor="var(--color-backtest)" stopOpacity={0.05} />
               </linearGradient>
-              {/* Blue/teal gradient for future forecast */}
               <linearGradient id="fillFuture" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-future)" stopOpacity={0.6} />
-                <stop offset="95%" stopColor="var(--color-future)" stopOpacity={0.05} />
+                <stop offset="5%"  stopColor="var(--color-future)"  stopOpacity={0.6} />
+                <stop offset="95%" stopColor="var(--color-future)"  stopOpacity={0.05} />
+              </linearGradient>
+              {/* NEW: very light gradient for confidence band */}
+              <linearGradient id="fillConfidence" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%"  stopColor="var(--color-future)"  stopOpacity={0.15} />
+                <stop offset="95%" stopColor="var(--color-future)"  stopOpacity={0.05} />
               </linearGradient>
             </defs>
 
@@ -215,7 +262,7 @@ export function ChartAreaInteractive({ data, predictions }: Props) {
               strokeWidth={2}
             />
 
-            {/* Backtest predictions — only shown after Run Prediction */}
+            {/* Backtest predictions */}
             {backtestData.length > 0 && (
               <Area
                 dataKey="backtest"
@@ -223,11 +270,48 @@ export function ChartAreaInteractive({ data, predictions }: Props) {
                 fill="url(#fillBacktest)"
                 stroke="var(--color-backtest)"
                 strokeWidth={2}
-                connectNulls={false} // don't connect across gaps
+                connectNulls={false}
               />
             )}
 
-            {/* Future predictions — dashed, only shown after Run Prediction */}
+            {/*
+              NEW: Confidence interval band — rendered as two stacked areas.
+              The "upper" area fills from 0 up to the upper bound with light opacity.
+              The "lower" area fills from 0 up to the lower bound with full background
+              color, effectively "erasing" the fill below the lower bound.
+              Result: only the band between lower and upper is shaded.
+              This only renders when showConfidence is true AND data has CI values.
+            */}
+            {futureData.length > 0 && hasConfidenceData && showConfidence && (
+              <>
+                {/* Upper bound fill — light shade up to upper bound */}
+                <Area
+                  dataKey="upper"
+                  type="natural"
+                  fill="url(#fillConfidence)"
+                  stroke="var(--color-future)"
+                  strokeWidth={0.5}
+                  strokeDasharray="2 4"
+                  strokeOpacity={0.5}
+                  connectNulls={false}
+                  legendType="none"    // don't show in legend
+                />
+                {/* Lower bound fill — erases below the lower bound */}
+                <Area
+                  dataKey="lower"
+                  type="natural"
+                  fill="var(--background)"  // matches page background → creates cutout effect
+                  stroke="var(--color-future)"
+                  strokeWidth={0.5}
+                  strokeDasharray="2 4"
+                  strokeOpacity={0.5}
+                  connectNulls={false}
+                  legendType="none"
+                />
+              </>
+            )}
+
+            {/* Future forecast line — drawn on top of the CI band */}
             {futureData.length > 0 && (
               <Area
                 dataKey="future"
@@ -235,10 +319,11 @@ export function ChartAreaInteractive({ data, predictions }: Props) {
                 fill="url(#fillFuture)"
                 stroke="var(--color-future)"
                 strokeWidth={2}
-                strokeDasharray="4 4"  // dashed to distinguish from historical
+                strokeDasharray="4 4"
                 connectNulls={false}
               />
             )}
+
           </AreaChart>
         </ChartContainer>
       </CardContent>

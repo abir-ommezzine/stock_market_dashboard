@@ -1,9 +1,10 @@
-"use client"
+// CHANGES:
+// 1. Added optimalParams state
+// 2. When prediction returns, update params state with optimal values
+// 3. Switch to custom mode automatically so user can see and edit the values
+// 4. Added a badge showing "Auto-optimized" next to the values
 
-// This component is a 2-step form that lets the user:
-// Step 1: Choose a model (ARIMA, ARMA, SARIMA)
-// Step 2: Use default params OR customize p, d, q, steps
-// Then calls the prediction API and returns results to the parent
+"use client"
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -24,10 +25,14 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, BrainCircuit, Loader2, Settings2, Zap } from "lucide-react"
-import { runPrediction, type PredictionPoint, type PredictionParams, type MetricsResult } from "@/lib/api/prediction.api"
+import { ArrowLeft, BrainCircuit, Loader2, Settings2, Sparkles, Zap } from "lucide-react"
+import {
+  runPrediction,
+  type PredictionPoint,
+  type PredictionParams,
+  type MetricsResult
+} from "@/lib/api/prediction.api"
 
-// What the parent passes in
 interface Props {
   datasetId: number
   symbol: string
@@ -35,20 +40,19 @@ interface Props {
     predictions: PredictionPoint[],
     metrics: MetricsResult | null,
     modelType: string
-  ) => void // called when predictions arrive
+  ) => void
 }
 
-// Model descriptions shown to the user
 const MODEL_INFO = {
   ARIMA: {
     label: "ARIMA",
     description: "Best for non-stationary data with trends. Uses differencing to stabilize the series.",
-    usesD: true, // ARIMA uses the d parameter
+    usesD: true,
   },
   ARMA: {
     label: "ARMA",
     description: "Best for already-stationary data. Combines autoregression and moving average.",
-    usesD: false, // ARMA does NOT use d (d is always 0)
+    usesD: false,
   },
   SARIMA: {
     label: "SARIMA",
@@ -59,49 +63,64 @@ const MODEL_INFO = {
 
 type ModelType = keyof typeof MODEL_INFO
 
-export function ModelConfigPanel({ datasetId,symbol, onResult }: Props) {
-  // Which step we're on: 1 = choose model, 2 = configure params
+export function ModelConfigPanel({ datasetId, symbol, onResult }: Props) {
   const [step, setStep] = useState(1)
-
-  // Selected model
   const [modelType, setModelType] = useState<ModelType>("ARIMA")
-
-  // Whether user wants default params or custom
   const [useDefaults, setUseDefaults] = useState(true)
-
-  // Custom parameter values
-  const [params, setParams] = useState({ p: 1, d: 1, q: 1, steps: 10 })
-
-  // Loading state while waiting for prediction
   const [loading, setLoading] = useState(false)
-
-  // Error message if prediction fails
   const [error, setError] = useState<string | null>(null)
 
-  // Update a single param field
+  // These are the param values shown in the inputs
+  // They start at (1,1,1,10) but get replaced by optimal values after first run
+  const [params, setParams] = useState({ p: 1, d: 1, q: 1, steps: 10 })
+
+  // NEW: tracks whether the current params came from auto-optimization
+  // Used to show the "Auto-optimized" badge
+  const [isOptimized, setIsOptimized] = useState(false)
+
   const setParam = (key: keyof typeof params, value: number) => {
     setParams(prev => ({ ...prev, [key]: value }))
+    // If user manually edits a param, clear the optimized badge
+    setIsOptimized(false)
   }
 
-  // Called when user clicks "Run Prediction"
   const handleRun = async () => {
     setLoading(true)
     setError(null)
 
     try {
-      // Build the request — if using defaults, just send model type and datasetId
-      // Java backend will use p=1, d=1, q=1, steps=10 as defaults
+      // When useDefaults is true, we send p=1,d=1,q=1 which triggers
+      // auto-selection on the Python side via auto_arima/grid search
       const payload: PredictionParams = {
         datasetId,
         model_type: modelType,
         symbol,
-        ...(useDefaults ? {} : params), // only include params if custom mode
+        ...(useDefaults ? {} : params),
       }
 
       const result = await runPrediction(payload)
-      onResult(result.predictions,result.metrics,modelType) // send predictions up to the page
+
+      // NEW: if Python returned optimal params, update our form fields
+      // This means next time the user runs with "Custom", they start from
+      // the optimal values rather than (1,1,1)
+      if (result.optimal_params) {
+        setParams(prev => ({
+          ...prev,  // keep steps as-is (user controls forecast horizon)
+          p: result.optimal_params!.p,
+          d: result.optimal_params!.d,
+          q: result.optimal_params!.q,
+        }))
+        setIsOptimized(true)   // show the "Auto-optimized" badge
+
+        // NEW: automatically switch to custom mode so the user can
+        // see the optimal values that were found and tweak them if needed
+        setUseDefaults(false)
+      }
+
+      onResult(result.predictions, result.metrics, modelType)
+
     } catch (err: any) {
-      setError("Prediction failed. Try different parameters.")
+      setError(err.message || "Prediction failed.")
     } finally {
       setLoading(false)
     }
@@ -120,7 +139,6 @@ export function ModelConfigPanel({ datasetId,symbol, onResult }: Props) {
             : "Configure model parameters"}
         </CardDescription>
 
-        {/* Step indicator — same style as the checkout form you shared */}
         <div className="flex items-center gap-3 pt-2">
           {[1, 2].map(s => (
             <div key={s} className="flex items-center">
@@ -142,11 +160,17 @@ export function ModelConfigPanel({ datasetId,symbol, onResult }: Props) {
         {/* ── STEP 1: Choose Model ── */}
         {step === 1 && (
           <div className="space-y-3">
-            {/* Render one card per model type */}
             {(Object.keys(MODEL_INFO) as ModelType[]).map(model => (
               <button
                 key={model}
-                onClick={() => setModelType(model)}
+                onClick={() => {
+                  setModelType(model)
+                  // NEW: reset optimized state when user switches model
+                  // because optimal params are model-specific
+                  setIsOptimized(false)
+                  setParams({ p: 1, d: 1, q: 1, steps: params.steps })
+                  setUseDefaults(true)
+                }}
                 className={`w-full text-left rounded-lg border p-4 transition-colors
                   ${modelType === model
                     ? "border-primary bg-primary/5"
@@ -163,7 +187,6 @@ export function ModelConfigPanel({ datasetId,symbol, onResult }: Props) {
                 </p>
               </button>
             ))}
-
             <Button className="w-full mt-2" onClick={() => setStep(2)}>
               Continue
             </Button>
@@ -174,8 +197,8 @@ export function ModelConfigPanel({ datasetId,symbol, onResult }: Props) {
         {step === 2 && (
           <div className="space-y-4">
 
-            {/* Default vs Custom toggle */}
             <div className="grid grid-cols-2 gap-2">
+              {/* Auto mode — sends p=1,d=1,q=1 which triggers Python auto-selection */}
               <button
                 onClick={() => setUseDefaults(true)}
                 className={`flex items-center gap-2 rounded-lg border p-3 text-sm transition-colors
@@ -183,11 +206,12 @@ export function ModelConfigPanel({ datasetId,symbol, onResult }: Props) {
               >
                 <Zap className="size-4 text-primary" />
                 <div className="text-left">
-                  <div className="font-medium">Defaults</div>
-                  <div className="text-xs text-muted-foreground">p=1, d=1, q=1</div>
+                  <div className="font-medium">Auto</div>
+                  <div className="text-xs text-muted-foreground">Find best params</div>
                 </div>
               </button>
 
+              {/* Custom mode — shows the param inputs */}
               <button
                 onClick={() => setUseDefaults(false)}
                 className={`flex items-center gap-2 rounded-lg border p-3 text-sm transition-colors
@@ -196,15 +220,30 @@ export function ModelConfigPanel({ datasetId,symbol, onResult }: Props) {
                 <Settings2 className="size-4 text-primary" />
                 <div className="text-left">
                   <div className="font-medium">Custom</div>
-                  <div className="text-xs text-muted-foreground">Set manually</div>
+                  {/* NEW: show current p,d,q values in the button subtitle */}
+                  <div className="text-xs text-muted-foreground">
+                    p={params.p}, d={params.d}, q={params.q}
+                    {/* Show sparkle if these values came from auto-optimization */}
+                    {isOptimized && " ✦"}
+                  </div>
                 </div>
               </button>
             </div>
 
-            {/* Custom parameter inputs — only shown if user picks custom */}
+            {/* Custom parameter inputs */}
             {!useDefaults && (
               <div className="space-y-3 rounded-lg border p-4">
-                {/* p — always shown */}
+
+                {/* NEW: show badge if params were auto-optimized */}
+                {isOptimized && (
+                  <div className="flex items-center gap-2 rounded-md bg-primary/5 border border-primary/20 px-3 py-2">
+                    <Sparkles className="size-3.5 text-primary" />
+                    <span className="text-xs text-primary font-medium">
+                      Auto-optimized via AIC/BIC grid search
+                    </span>
+                  </div>
+                )}
+
                 <div className="space-y-1">
                   <Label className="text-xs">
                     p — Autoregressive order
@@ -217,7 +256,6 @@ export function ModelConfigPanel({ datasetId,symbol, onResult }: Props) {
                   />
                 </div>
 
-                {/* d — only shown for ARIMA and SARIMA, not ARMA */}
                 {MODEL_INFO[modelType].usesD && (
                   <div className="space-y-1">
                     <Label className="text-xs">
@@ -232,7 +270,6 @@ export function ModelConfigPanel({ datasetId,symbol, onResult }: Props) {
                   </div>
                 )}
 
-                {/* q — always shown */}
                 <div className="space-y-1">
                   <Label className="text-xs">
                     q — Moving average order
@@ -245,7 +282,6 @@ export function ModelConfigPanel({ datasetId,symbol, onResult }: Props) {
                   />
                 </div>
 
-                {/* steps — how far into the future to predict */}
                 <div className="space-y-1">
                   <Label className="text-xs">
                     Steps — Forecast horizon
@@ -266,12 +302,10 @@ export function ModelConfigPanel({ datasetId,symbol, onResult }: Props) {
               </div>
             )}
 
-            {/* Error message */}
             {error && (
               <p className="text-sm text-destructive">{error}</p>
             )}
 
-            {/* Navigation buttons */}
             <div className="flex gap-2 pt-2">
               <Button
                 variant="outline"

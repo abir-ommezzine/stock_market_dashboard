@@ -7,6 +7,8 @@ export interface PredictionPoint {
   date: string   // "2015-03-03"
   value: number  // predicted close price
   type:"backtest" | "future"
+  lower?: number
+  upper?: number
 }
 export interface MetricsResult{
   aic: number | null
@@ -20,6 +22,8 @@ export interface MetricsResult{
 export interface PredictionResult {
   predictions: PredictionPoint[]
   metrics: MetricsResult | null
+  optimal_params:{p:number;d:number;q:number} | null
+  residuals: Record<string,any>|null
 }
 
 export interface PredictionParams {
