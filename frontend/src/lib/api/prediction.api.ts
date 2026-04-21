@@ -1,7 +1,7 @@
 // This file handles all ML/prediction related API calls to the Java backend
 // Java then forwards them to the Python FastAPI service
 
-const API = "http://localhost:8080/api"
+const API = "http://localhost:8083/api"
 
 export interface PredictionPoint {
   date: string   // "2015-03-03"

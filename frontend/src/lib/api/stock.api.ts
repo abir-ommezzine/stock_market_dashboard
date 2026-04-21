@@ -1,4 +1,4 @@
-const API = "http://localhost:8080/api";
+const API = "http://localhost:8083/api";
 
 export async function fetchStockData(datasetId: number,symbol: string) {
   console.log("Sending request:", { datasetId, symbol })
