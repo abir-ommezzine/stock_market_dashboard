@@ -7,9 +7,14 @@ import { SidebarTrigger } from "@/components/ui/sidebar"
 import { CommandSearch, SearchTrigger } from "@/components/command-search"
 import { ModeToggle } from "@/components/mode-toggle"
 import { getAppUrl } from "@/lib/utils"
+import { useNavigate } from "react-router-dom"   // ADDED
+import { useAuth } from "@/contexts/auth.context" // ADDED
 
 export function SiteHeader() {
   const [searchOpen, setSearchOpen] = React.useState(false)
+  const navigate = useNavigate()
+  const { isAuthenticated ,user,logout} = useAuth()
+
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -22,6 +27,11 @@ export function SiteHeader() {
     document.addEventListener("keydown", down)
     return () => document.removeEventListener("keydown", down)
   }, [])
+  // ADDED: logout and redirect to sign-in
+  const handleLogout = () => {
+    logout()
+    navigate("/auth/sign-in-3")
+  }
 
   return (
     <>
@@ -56,16 +66,35 @@ export function SiteHeader() {
                 Landing Page
               </a>
             </Button>
-            <Button variant="ghost" asChild size="sm" className="hidden sm:flex">
-              <a
-                href="https://github.com/silicondeck/shadcn-dashboard-landing-template"
-                rel="noopener noreferrer"
-                target="_blank"
-                className="dark:text-foreground"
+
+             {/* CHANGED: replaced GitHub link with auth-aware button */}
+            {isAuthenticated ? (
+              // Logged in: show user's first name + logout button
+              <div className="hidden sm:flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {user?.firstName}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="dark:text-foreground"
+                >
+                  Sign out
+                </Button>
+              </div>
+            ) : (
+              // Not logged in: show Sign In button
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hidden sm:flex dark:text-foreground"
+                onClick={() => navigate("/auth/sign-in-3")}
               >
-                GitHub
-              </a>
-            </Button>
+                Sign in
+              </Button>
+            )}
+
             <ModeToggle />
           </div>
         </div>

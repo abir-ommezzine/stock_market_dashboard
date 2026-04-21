@@ -12,9 +12,9 @@ export function ProtectedRoute({ children }: Props) {
   const { isAuthenticated } = useAuth()
 
   // If not logged in, redirect to sign-in page
-  if (!isAuthenticated) {
+  /*if (!isAuthenticated) {
     return <Navigate to="/auth/sign-in-3" replace />
-  }
+  }*/
 
   return <>{children}</>
 }
