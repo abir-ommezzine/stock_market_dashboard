@@ -1,8 +1,12 @@
 package com.stockproject.experiment_service.model;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import lombok.Getter;
+import lombok.Setter;
 
+import java.time.LocalDateTime;
+@Getter
+@Setter
 @Entity
 @Table(name = "datasets")
 public class Dataset {
@@ -12,7 +16,7 @@ public class Dataset {
     private Long id;
 
     @Column(nullable = false)
-    private Long userId;
+    private Long userId=0L;
 
     @Column(nullable = false)
     private String fileName; // Display name for the dataset
@@ -45,7 +49,7 @@ public class Dataset {
         this.userId = userId;
         this.fileName = fileName;
         this.apiUrl = apiUrl;
-        this.sourceType = SourceType.API;
+        this.sourceType = SourceType.URL;
         this.createdAt = LocalDateTime.now();
     }
 

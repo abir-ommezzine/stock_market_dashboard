@@ -1,7 +1,10 @@
 export interface Dataset {
   id: number
-  name: string
-  description: string
+  userId: number
+  fileName: string
+  filePath?: string
+  apirl?: string
+  sourceName: string
+  sourceType: "FILE"|"PREDEFINED"|"API"
   createdAt: string
-  updatedAt: string
 }

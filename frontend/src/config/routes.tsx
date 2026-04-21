@@ -197,5 +197,6 @@ export const routes: RouteConfig[] = [
   {
   path: "/prediction/historical",
   element: <HistoricalPricesPage />
-},
+  },
+  
 ]

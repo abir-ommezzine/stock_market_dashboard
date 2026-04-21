@@ -15,6 +15,7 @@ import { DatasourceForm } from "../components/datasource_form"
 import { CsvUpload } from "../components/csv_upload"
 import { CompanySelection } from "../components/company_selection"
 import type { Dataset } from "../types"
+import { UrlDatasetForm } from "../components/UrlDatasetForm"
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -48,13 +49,17 @@ export function NewPredictionDialog({ open, onOpenChange }: Props) {
         {step === 1 && (
           <Tabs defaultValue="datasource">
 
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="datasource">
                 Select Data Source
               </TabsTrigger>
 
               <TabsTrigger value="csv">
                 Upload CSV
+              </TabsTrigger>
+
+              <TabsTrigger value="url">
+                Paste URL
               </TabsTrigger>
             </TabsList>
 
@@ -75,6 +80,15 @@ export function NewPredictionDialog({ open, onOpenChange }: Props) {
                 }}
               />
             </TabsContent>
+
+            <TabsContent value="url">
+            <UrlDatasetForm
+            onSuccess={(dataset)=>{
+            setDataInput(dataset)
+            setStep(2)
+              }}
+              />
+          </TabsContent>
 
           </Tabs>
         )}

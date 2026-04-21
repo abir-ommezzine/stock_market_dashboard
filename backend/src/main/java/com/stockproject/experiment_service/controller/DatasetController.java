@@ -1,6 +1,10 @@
 package com.stockproject.experiment_service.controller;
 
+import com.stockproject.experiment_service.dto.StockRequest;
 import com.stockproject.experiment_service.model.Dataset;
+import com.stockproject.experiment_service.model.SourceType;
+import com.stockproject.experiment_service.model.StockPrice;
+import com.stockproject.experiment_service.provider.DataSourceProvider;
 import com.stockproject.experiment_service.service.DatasetService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -9,52 +13,149 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
+import com.stockproject.experiment_service.repository.DatasetRepository;
+import com.stockproject.experiment_service.repository.StockPriceRepository;
+import com.stockproject.experiment_service.provider.ProviderFactory;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/datasets")
+@CrossOrigin(origins = "http://localhost:5173")
 public class DatasetController {
 
     private final DatasetService datasetService;
+    private final DatasetRepository datasetRepository;
+    private final StockPriceRepository stockPriceRepository;
+    private final ProviderFactory providerFactory;
 
-    public DatasetController(DatasetService datasetService) {
+    public DatasetController(
+            DatasetService datasetService,
+            DatasetRepository datasetRepository,
+            StockPriceRepository stockPriceRepository,
+            ProviderFactory providerFactory
+    ) {
         this.datasetService = datasetService;
+        this.datasetRepository = datasetRepository;
+        this.stockPriceRepository = stockPriceRepository;
+        this.providerFactory = providerFactory;
     }
 
     @Operation(summary = "Upload a dataset file")
     @PostMapping(
-        value = "/upload", 
-        consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+            value = "/upload",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     public ResponseEntity<Dataset> uploadDataset(
             @Parameter(
-                description = "File to upload", 
-                content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)
+                    description = "File to upload",
+                    content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)
             )
             @RequestPart("file") MultipartFile file,
-            @RequestParam("userId") Long userId) {
-
+            @RequestParam(required = false) Long userId) {
+        Long uid = (userId == null) ? 0L : userId;
         return ResponseEntity.ok(
-                datasetService.uploadDataset(file, userId)
+                datasetService.uploadDataset(file, uid)
         );
     }
 
     @Operation(summary = "Register an external API as a dataset")
-    @PostMapping("/link-api")
-    public ResponseEntity<Dataset> linkApiDataset(
-            @RequestParam String apiUrl,
+    @PostMapping("/link-source")
+    public ResponseEntity<Dataset> linkSource(
+            @RequestParam SourceType sourceName,
             @RequestParam String displayName,
-            @RequestParam Long userId) {
-        
+            @RequestParam(required = false) Long userId) {
+        Long uid = (userId == null) ? 0L : userId;
         return ResponseEntity.ok(
-                datasetService.registerApiDataset(apiUrl, displayName, userId)
+                datasetService.registerApiDataset(sourceName, displayName, uid)
         );
+    }
+    @Operation(summary = "Link an external CSV via URL")
+    @PostMapping("/link-url")
+    public ResponseEntity<Dataset> linkUrlDataset(@RequestBody Map<String, Object> payload) {
+        String url = (String) payload.get("url");
+        Long userId = payload.containsKey("userId") ? Long.valueOf(payload.get("userId").toString()) : 0L;
+
+        // Create and save the new dataset.
+        // Using "URL Dataset" as a default display name, but you could extract the filename from the URL if preferred.
+        Dataset dataset = new Dataset(userId, "URL Dataset", url, SourceType.URL);
+
+        return ResponseEntity.ok(datasetRepository.save(dataset));
     }
 
     @Operation(summary = "Get all datasets for a specific user")
     @GetMapping("/{userId}")
     public ResponseEntity<List<Dataset>> getUserDatasets(@PathVariable Long userId) {
         return ResponseEntity.ok(datasetService.getUserDatasets(userId));
+    }
+
+    @PostMapping("/load")
+    public ResponseEntity<?> loadDataset(
+            @RequestParam SourceType sourceType,
+            @RequestParam Map<String,Object> params
+    ){
+        return ResponseEntity.ok(
+                datasetService.loadFromSource(sourceType, params)
+        );
+    }
+    @GetMapping("/{datasetId}/prices")
+    public ResponseEntity<?> getPrices(
+            @PathVariable Long datasetId){
+
+        return ResponseEntity.ok(
+                stockPriceRepository.findByDatasetId(datasetId)
+        );
+    }
+    @PostMapping("/stocks/fetch")
+    public List<StockPrice> fetch(@RequestBody StockRequest req){
+
+        Dataset dataset =
+                datasetRepository.findById(req.getDatasetId()).orElseThrow();
+
+        DataSourceProvider provider =
+                providerFactory.get(dataset.getSourceType());
+
+        return provider.load(Map.of(
+                "symbol", req.getSymbol(),
+                "url", dataset.getApiUrl(),
+                "path", dataset.getFilePath()
+        ));
+    }
+    @GetMapping("/sources")
+    public ResponseEntity<List<Map<String,String>>> getSources() {
+
+        List<Map<String,String>> sources = List.of(
+                Map.of("value", "YAHOO", "label", "Yahoo Finance"),
+                Map.of("value", "ALPHAVANTAGE", "label", "Alpha Vantage")
+        );
+
+        return ResponseEntity.ok(sources);
+    }
+    @GetMapping("/{datasetId}/symbols")
+    public ResponseEntity<List<String>> getSymbols(@PathVariable Long datasetId) {
+
+        Dataset dataset = datasetRepository.findById(datasetId)
+                .orElseThrow(() -> new RuntimeException("Dataset not found"));
+
+        List<String> symbols;
+
+        switch (dataset.getSourceType()) {
+            case FILE:
+            case URL:
+                // Extract distinct symbols from the dataset
+                symbols = datasetService.extractSymbolsFromDataset(dataset);
+                break;
+
+            case YAHOO:
+            case ALPHAVANTAGE:
+                // Predefined popular symbols for API sources
+                symbols = List.of("AAPL", "GOOGL", "MSFT", "AMZN", "TSLA");
+                break;
+
+            default:
+                symbols = List.of(); // empty list for unknown types
+        }
+
+        return ResponseEntity.ok(symbols);
     }
 }

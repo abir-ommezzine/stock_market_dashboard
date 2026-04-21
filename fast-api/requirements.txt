@@ -1,4 +1,8 @@
 fastapi
 uvicorn
-SQLAlchemy
-psycopg2-binary
+pandas
+numpy
+statsmodels
+scikit-learn
+python-multipart
+joblib

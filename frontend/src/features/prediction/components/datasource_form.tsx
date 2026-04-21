@@ -1,8 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-
 import {
   Select,
   SelectContent,
@@ -11,32 +10,65 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
+import { getSources, createPredefinedDataset } from "@/lib/api/dataset.api"
+
 interface Props {
-  onNext: (data: any) => void
+  onNext: (dataset: any) => void
 }
 
 export function DatasourceForm({ onNext }: Props) {
 
-  const [datasource, setDatasource] = useState("")
+  const [sources, setSources] = useState<any[]>([])
+  const [selected, setSelected] = useState("")
+  const userId = 1
+
+  useEffect(() => {
+    getSources()
+      .then((data) => {
+        // Double-check that we actually received an array before setting it
+        if (Array.isArray(data)) {
+          setSources(data)
+        } else {
+          console.error("API returned non-array data:", data)
+          setSources([]) // Fallback to an empty array so .map() doesn't crash
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to fetch sources:", err)
+        setSources([]) // Fallback to an empty array if the network request fails
+      })
+  }, [])
+
+  const handleContinue = async () => {
+    const dataset = await createPredefinedDataset(
+      selected,
+      userId
+    )
+
+    onNext(dataset)
+  }
 
   return (
     <div className="space-y-4 mt-4">
 
-      <Select onValueChange={setDatasource}>
+      <Select onValueChange={setSelected}>
         <SelectTrigger>
           <SelectValue placeholder="Choose datasource" />
         </SelectTrigger>
 
         <SelectContent>
-          <SelectItem value="yahoo">Yahoo Finance</SelectItem>
-          <SelectItem value="alpha">Alpha Vantage</SelectItem>
+          {sources.map((s) => (
+            <SelectItem key={s.value} value={s.value}>
+              {s.label}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
 
       <Button
-        disabled={!datasource}
+        disabled={!selected}
         className="w-full"
-        onClick={() => onNext({ datasource })}
+        onClick={handleContinue}
       >
         Continue
       </Button>
