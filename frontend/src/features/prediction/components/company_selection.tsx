@@ -27,7 +27,7 @@ export function CompanySelection({ dataInput, onBack }: Props) {
   useEffect(() => {
     if (dataInput?.id) {
       setIsLoading(true)
-      fetch(`http://localhost:8080/api/datasets/${dataInput.id}/symbols`)
+      fetch(`http://localhost:8083/api/datasets/${dataInput.id}/symbols`)
         .then((res) => res.json())
         .then((data) => setSymbols(data))
         .catch((err) => console.error("Failed to fetch symbols", err))

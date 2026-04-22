@@ -1,5 +1,6 @@
 import { lazy } from 'react'
 import { Navigate } from 'react-router-dom'
+import { ProtectedRoute } from "@/features/prediction/components/protected-route"
 const HistoricalPricesPage = lazy(
   () => import("@/features/prediction/pages/historical_prices_page")
 )
@@ -64,7 +65,11 @@ export const routes: RouteConfig[] = [
   // Dashboard Routes
   {
     path: "/dashboard",
-    element: <Dashboard />
+     element: (
+    <ProtectedRoute>
+      <Dashboard />
+    </ProtectedRoute>
+  )
   },
   {
     path: "/dashboard-2",

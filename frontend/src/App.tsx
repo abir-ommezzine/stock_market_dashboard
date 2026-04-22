@@ -2,6 +2,7 @@ import { BrowserRouter as Router } from 'react-router-dom'
 import { ThemeProvider } from '@/components/theme-provider'
 import { SidebarConfigProvider } from '@/contexts/sidebar-context'
 import { AppRouter } from '@/components/router/app-router'
+import { AuthProvider } from '@/contexts/auth.context'  // ADDED
 import { useEffect } from 'react'
 import { initGTM } from '@/utils/analytics'
 
@@ -19,7 +20,9 @@ function App() {
       <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
         <SidebarConfigProvider>
           <Router basename={basename}>
+            <AuthProvider>
             <AppRouter />
+            </AuthProvider>
           </Router>
         </SidebarConfigProvider>
       </ThemeProvider>

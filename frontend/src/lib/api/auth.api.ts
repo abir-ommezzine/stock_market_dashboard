@@ -24,7 +24,7 @@ export interface AuthUser {
 // Simulates a login — replace with real fetch() later
 export async function login(credentials: LoginCredentials): Promise<AuthUser> {
   // TODO: replace with real API call
-  // const res = await fetch("http://localhost:8080/api/auth/login", { ... })
+  // const res = await fetch("http://localhost:8083/api/auth/login", { ... })
   return {
     id: 1,
     email: credentials.email,
