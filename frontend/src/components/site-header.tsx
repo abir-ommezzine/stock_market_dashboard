@@ -46,15 +46,13 @@ export function SiteHeader() {
             <SearchTrigger onClick={() => setSearchOpen(true)} />
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <Button variant="ghost" asChild size="sm" className="hidden sm:flex">
-              <a
-                href="https://shadcnstore.com/blocks"
-                rel="noopener noreferrer"
-                target="_blank"
-                className="dark:text-foreground"
-              >
-                Blocks
-              </a>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="hidden sm:flex dark:text-foreground"
+              onClick={() => navigate('/historic')}
+            >
+              Historic
             </Button>
             <Button variant="ghost" asChild size="sm" className="hidden sm:flex">
               <a
