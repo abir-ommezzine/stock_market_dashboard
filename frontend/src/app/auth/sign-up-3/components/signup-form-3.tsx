@@ -56,7 +56,7 @@ export function SignupForm3({
       login(user)
       navigate("/dashboard")
     } catch (err: any) {
-      setError("Registration failed. Please try again.")
+      setError(err.message || "Registration failed. Please try again.")
     } finally {
       setLoading(false)
     }

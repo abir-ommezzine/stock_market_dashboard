@@ -1,5 +1,4 @@
-// Placeholder auth API — replace with real calls when backend is ready
-// All functions are stubs that simulate success for UI testing
+const API_BASE = "http://localhost:8083/api/auth"
 
 export interface LoginCredentials {
   email: string
@@ -19,33 +18,48 @@ export interface AuthUser {
   email: string
   firstName: string
   lastName: string
+  token: string
 }
 
-// Simulates a login — replace with real fetch() later
 export async function login(credentials: LoginCredentials): Promise<AuthUser> {
-  // TODO: replace with real API call
-  // const res = await fetch("http://localhost:8083/api/auth/login", { ... })
-  return {
-    id: 1,
-    email: credentials.email,
-    firstName: "John",
-    lastName: "Doe",
+  const res = await fetch(`${API_BASE}/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: credentials.email,
+      password: credentials.password,
+    }),
+  })
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || "Login failed")
   }
+
+  return res.json()
 }
 
-// Simulates a register — replace with real API call later
 export async function register(credentials: RegisterCredentials): Promise<AuthUser> {
-  // TODO: replace with real API call
-  return {
-    id: 1,
-    email: credentials.email,
-    firstName: credentials.firstName,
-    lastName: credentials.lastName,
+  const res = await fetch(`${API_BASE}/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      firstName: credentials.firstName,
+      lastName: credentials.lastName,
+      email: credentials.email,
+      password: credentials.password,
+    }),
+  })
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || "Registration failed")
   }
+
+  return res.json()
 }
 
-// Simulates forgot password — replace with real API call later
-export async function forgotPassword(email: string): Promise<void> {
-  // TODO: replace with real API call
-  console.log("Reset link sent to:", email)
+export async function forgotPassword(_email: string): Promise<void> {
+  // Not yet implemented on backend
+  console.log("Forgot password not yet implemented")
 }

@@ -1,15 +1,12 @@
-// Global auth state — wraps the whole app so any component can access user info
-// For now stores user in localStorage so page refresh doesn't log you out
-// Replace localStorage with real JWT handling when backend is ready
-
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import type { AuthUser } from "@/lib/api/auth.api"
 
 interface AuthContextType {
-  user: AuthUser | null          // null = not logged in
+  user: AuthUser | null
   isAuthenticated: boolean
   login: (user: AuthUser) => void
   logout: () => void
+  getToken: () => string | null
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -17,8 +14,6 @@ const AuthContext = createContext<AuthContextType | null>(null)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
 
-  // On mount, try to restore user from localStorage
-  // This keeps the user logged in after page refresh
   useEffect(() => {
     const stored = localStorage.getItem("auth_user")
     if (stored) {
@@ -32,14 +27,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = (user: AuthUser) => {
     setUser(user)
-    // Store in localStorage so it persists across refreshes
-    // TODO: replace with JWT token storage when backend is ready
     localStorage.setItem("auth_user", JSON.stringify(user))
+    // Also store token separately for easy access in API calls
+    localStorage.setItem("auth_token", user.token)
   }
 
   const logout = () => {
     setUser(null)
     localStorage.removeItem("auth_user")
+    localStorage.removeItem("auth_token")
+  }
+
+  const getToken = (): string | null => {
+    return localStorage.getItem("auth_token")
   }
 
   return (
@@ -48,14 +48,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: user !== null,
       login,
       logout,
+      getToken,
     }}>
       {children}
     </AuthContext.Provider>
   )
 }
 
-// Custom hook — use this in any component to access auth state
-// Example: const { user, isAuthenticated, logout } = useAuth()
 export function useAuth() {
   const ctx = useContext(AuthContext)
   if (!ctx) throw new Error("useAuth must be used inside AuthProvider")
