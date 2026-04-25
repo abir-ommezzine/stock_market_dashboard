@@ -7,7 +7,7 @@
  *   const data = await apiFetch("/api/datasets")
  */
 
-const API_BASE = "http://localhost:8083"
+const API_BASE = "http://localhost:8082"
 
 export async function apiFetch(path: string, options: RequestInit = {}): Promise<Response> {
   const token = localStorage.getItem("auth_token")
