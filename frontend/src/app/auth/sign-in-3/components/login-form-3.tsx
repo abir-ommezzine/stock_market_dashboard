@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Logo } from "@/components/logo"
 import { useState } from "react"
-import { useNavigate, Link } from "react-router-dom"
+import { useNavigate, useLocation, Link } from "react-router-dom"
 import { useAuth } from "@/contexts/auth.context"
 import { login as loginApi } from "@/lib/api/auth.api"
 import { Loader2 } from "lucide-react"
@@ -24,7 +24,11 @@ export function LoginForm3({
   ...props
 }: React.ComponentProps<"div">) {
   const navigate  = useNavigate()
+  const location  = useLocation()
   const { login } = useAuth()
+
+  // If redirected from a protected page, go back there after login
+  const redirectTo = (location.state as any)?.redirect || "/dashboard"
 
   const [email,    setEmail]    = useState("test@example.com")
   const [password, setPassword] = useState("password")
@@ -37,12 +41,9 @@ export function LoginForm3({
     setError(null)
 
     try {
-      // Call auth API (stub for now, replace with real call later)
       const user = await loginApi({ email, password })
-      // Store user in context + localStorage
       login(user)
-      // Redirect to dashboard
-      navigate("/dashboard")
+      navigate(redirectTo)
     } catch (err: any) {
       setError("Invalid email or password.")
     } finally {

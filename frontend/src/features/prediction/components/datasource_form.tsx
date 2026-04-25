@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select"
 
 import { getSources, createPredefinedDataset } from "@/lib/api/dataset.api"
+import { useAuth } from "@/contexts/auth.context"
 
 interface Props {
   onNext: (dataset: any) => void
@@ -20,7 +21,8 @@ export function DatasourceForm({ onNext }: Props) {
 
   const [sources, setSources] = useState<any[]>([])
   const [selected, setSelected] = useState("")
-  const userId = 1
+  const { user } = useAuth()
+  const userId = user?.id ?? 1
 
   useEffect(() => {
     getSources()
