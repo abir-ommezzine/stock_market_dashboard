@@ -30,6 +30,7 @@ import {
   runPrediction,
   type PredictionPoint,
   type PredictionParams,
+  type PredictionResult,
   type MetricsResult
 } from "@/lib/api/prediction.api"
 
