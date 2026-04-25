@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:8082/api/auth"
+const API_BASE = "http://localhost:8083/api/auth"
 
 export interface LoginCredentials {
   email: string

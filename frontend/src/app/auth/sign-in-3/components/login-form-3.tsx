@@ -28,7 +28,9 @@ export function LoginForm3({
   const { login } = useAuth()
 
   // If redirected from a protected page, go back there after login
-  const redirectTo = (location.state as any)?.redirect || "/dashboard"
+  const from = location.state as any
+  const redirectTo = from?.redirect || "/dashboard"
+  const redirectState = from?.locationState || undefined
 
   const [email,    setEmail]    = useState("test@example.com")
   const [password, setPassword] = useState("password")
@@ -43,7 +45,7 @@ export function LoginForm3({
     try {
       const user = await loginApi({ email, password })
       login(user)
-      navigate(redirectTo)
+      navigate(redirectTo, { state: redirectState })
     } catch (err: any) {
       setError("Invalid email or password.")
     } finally {

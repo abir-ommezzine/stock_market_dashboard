@@ -7,6 +7,7 @@
 "use client"
 
 import { useState } from "react"
+import { useNavigate, useLocation } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -25,7 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, BrainCircuit, Loader2, Settings2, Sparkles, Zap } from "lucide-react"
+import { ArrowLeft, BrainCircuit, Loader2, Save, Settings2, Sparkles, Zap } from "lucide-react"
 import {
   runPrediction,
   type PredictionPoint,
@@ -33,10 +34,13 @@ import {
   type PredictionResult,
   type MetricsResult
 } from "@/lib/api/prediction.api"
+import { useAuth } from "@/contexts/auth.context"
+import { toast } from "sonner"
 
 interface Props {
   datasetId: number
   symbol: string
+  hasPrediction?: boolean
   preloadedParams?: {
     model_type: "ARIMA" | "ARMA" | "SARIMA"
     p?: number
@@ -51,6 +55,8 @@ interface Props {
     usedParams: PredictionParams,
     fullResult: PredictionResult
   ) => void
+  onSave?: () => void
+  onClearPrediction?: () => void
 }
 
 const MODEL_INFO = {
@@ -73,12 +79,16 @@ const MODEL_INFO = {
 
 type ModelType = keyof typeof MODEL_INFO
 
-export function ModelConfigPanel({ datasetId, symbol, preloadedParams, onResult }: Props) {
+export function ModelConfigPanel({ datasetId, symbol, hasPrediction = false, preloadedParams, onResult, onSave, onClearPrediction }: Props) {
   const [step, setStep] = useState(1)
   const [modelType, setModelType] = useState<ModelType>(preloadedParams?.model_type ?? "ARIMA")
   const [useDefaults, setUseDefaults] = useState(!preloadedParams)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const { isAuthenticated } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
 
   const [params, setParams] = useState({
     p: preloadedParams?.p ?? 1,
@@ -130,6 +140,23 @@ export function ModelConfigPanel({ datasetId, symbol, preloadedParams, onResult 
     }
   }
 
+  const handleSave = () => {
+    if (!isAuthenticated) {
+      // Persist the full page state so we can restore it after login
+      sessionStorage.setItem("pendingSave", "true")
+      sessionStorage.setItem("pendingSaveState", JSON.stringify(location.state))
+      navigate("/auth/sign-in-3", {
+        state: {
+          redirect: location.pathname,
+          locationState: location.state,
+        },
+      })
+      return
+    }
+    onSave?.()
+    toast.success("Prediction saved successfully!")
+  }
+
   return (
     <Card className="@container/card">
       <CardHeader>
@@ -169,11 +196,12 @@ export function ModelConfigPanel({ datasetId, symbol, preloadedParams, onResult 
                 key={model}
                 onClick={() => {
                   setModelType(model)
-                  // NEW: reset optimized state when user switches model
-                  // because optimal params are model-specific
+                  // reset optimized state when user switches model
                   setIsOptimized(false)
                   setParams({ p: 1, d: 1, q: 1, steps: params.steps })
                   setUseDefaults(true)
+                  // clear any existing prediction overlay + gray out Save
+                  onClearPrediction?.()
                 }}
                 className={`w-full text-left rounded-lg border p-4 transition-colors
                   ${modelType === model
@@ -313,13 +341,17 @@ export function ModelConfigPanel({ datasetId, symbol, preloadedParams, onResult 
             <div className="flex gap-2 pt-2">
               <Button
                 variant="outline"
-                onClick={() => setStep(1)}
+                onClick={() => {
+                  setStep(1)
+                  onClearPrediction?.()
+                }}
                 className="flex items-center gap-1"
               >
                 <ArrowLeft className="size-4" /> Back
               </Button>
 
               <Button
+                size="sm"
                 className="flex-1"
                 onClick={handleRun}
                 disabled={loading}
@@ -327,6 +359,17 @@ export function ModelConfigPanel({ datasetId, symbol, preloadedParams, onResult 
                 {loading
                   ? <><Loader2 className="size-4 animate-spin mr-2" /> Running...</>
                   : "Run Prediction"}
+              </Button>
+
+              <Button
+                size="sm"
+                onClick={handleSave}
+                disabled={!hasPrediction}
+                className="bg-green-600 hover:bg-green-700 text-white dark:bg-green-600 dark:hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-green-600"
+                title={!hasPrediction ? "Run a prediction first" : isAuthenticated ? "Save experiment" : "Sign in to save"}
+              >
+                <Save className="size-4" />
+                Save
               </Button>
             </div>
           </div>

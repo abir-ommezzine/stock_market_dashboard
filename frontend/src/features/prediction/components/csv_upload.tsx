@@ -25,7 +25,7 @@ export function CsvUpload({ onSuccess, userId = 1 }: Props) {
     // Since your controller uses @RequestParam, we append it to the URL
     
     try {
-      const url = `http://localhost:8082/api/datasets/upload?userId=${userId}`;
+      const url = `http://localhost:8083/api/datasets/upload?userId=${userId}`;
       
       const response = await fetch(url, {
         method: "POST",
