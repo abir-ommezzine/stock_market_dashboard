@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { BaseLayout } from '@/components/layouts/base-layout'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -21,123 +21,136 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  LogIn,
+  Loader2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-
-interface Experiment {
-  id: string
-  stockName: string
-  modelUsed: string
-  parameters: string
-  date: string
-}
-
-// Static data — will be replaced with dynamic data later
-const experimentsData: Experiment[] = [
-  {
-    id: '1',
-    stockName: 'AAPL',
-    modelUsed: 'ARIMA',
-    parameters: 'p=2, d=1, q=2',
-    date: '2026-04-10',
-  },
-  {
-    id: '2',
-    stockName: 'TSLA',
-    modelUsed: 'SARIMA',
-    parameters: 'p=1, d=1, q=1, P=1, D=1, Q=1, s=12',
-    date: '2026-04-12',
-  },
-  {
-    id: '3',
-    stockName: 'GOOGL',
-    modelUsed: 'ARMA',
-    parameters: 'p=3, q=2',
-    date: '2026-04-14',
-  },
-  {
-    id: '4',
-    stockName: 'MSFT',
-    modelUsed: 'ARIMA',
-    parameters: 'p=1, d=1, q=1',
-    date: '2026-04-15',
-  },
-  {
-    id: '5',
-    stockName: 'AMZN',
-    modelUsed: 'SARIMA',
-    parameters: 'p=2, d=1, q=2, P=0, D=1, Q=1, s=12',
-    date: '2026-04-17',
-  },
-  {
-    id: '6',
-    stockName: 'NVDA',
-    modelUsed: 'ARMA',
-    parameters: 'p=2, q=1',
-    date: '2026-04-18',
-  },
-  {
-    id: '7',
-    stockName: 'META',
-    modelUsed: 'ARIMA',
-    parameters: 'p=3, d=1, q=3',
-    date: '2026-04-20',
-  },
-  {
-    id: '8',
-    stockName: 'NFLX',
-    modelUsed: 'SARIMA',
-    parameters: 'p=1, d=1, q=1, P=1, D=0, Q=1, s=6',
-    date: '2026-04-22',
-  },
-]
+import { useAuth } from '@/contexts/auth.context'
+import { useNavigate } from 'react-router-dom'
+import { getUserPredictions, deletePrediction, type SavedPrediction } from '@/lib/api/prediction_history.api'
+import type { PredictionResult } from '@/lib/api/prediction.api'
 
 const MODEL_COLORS: Record<string, string> = {
-  ARIMA:
-    'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-400 dark:border-blue-800',
-  SARIMA:
-    'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-400 dark:border-purple-800',
-  ARMA: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-400 dark:border-amber-800',
+  ARIMA:  'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-400 dark:border-blue-800',
+  SARIMA: 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-400 dark:border-purple-800',
+  ARMA:   'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-400 dark:border-amber-800',
 }
 
 export default function HistoricPage() {
+  const { user, isAuthenticated } = useAuth()
+  const navigate = useNavigate()
+
+  const [predictions, setPredictions] = useState<SavedPrediction[]>([])
+  const [loading, setLoading]         = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedRows, setSelectedRows] = useState<string[]>([])
-  const [search, setSearch] = useState('')
+  const [search, setSearch]           = useState('')
 
   const itemsPerPage = 6
 
-  const filtered = experimentsData.filter(
-    (e) =>
-      e.stockName.toLowerCase().includes(search.toLowerCase()) ||
-      e.modelUsed.toLowerCase().includes(search.toLowerCase()),
+  // Fetch predictions when signed in
+  useEffect(() => {
+    if (!user) return
+    setLoading(true)
+    getUserPredictions(user.id)
+      .then(setPredictions)
+      .catch(err => console.error("Failed to fetch predictions:", err))
+      .finally(() => setLoading(false))
+  }, [user])
+
+  const filtered = predictions.filter(p =>
+    p.company.toLowerCase().includes(search.toLowerCase()) ||
+    p.modelType.toLowerCase().includes(search.toLowerCase())
   )
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage))
+  const totalPages  = Math.max(1, Math.ceil(filtered.length / itemsPerPage))
   const currentItems = filtered.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage,
   )
 
-  const toggleRow = (id: string) => {
-    setSelectedRows((prev) =>
-      prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id],
-    )
-  }
+  const toggleRow = (id: string) =>
+    setSelectedRows(prev => prev.includes(id) ? prev.filter(r => r !== id) : [...prev, id])
 
-  const toggleAll = () => {
-    if (selectedRows.length === currentItems.length && currentItems.length > 0) {
-      setSelectedRows([])
-    } else {
-      setSelectedRows(currentItems.map((e) => e.id))
-    }
-  }
+  const toggleAll = () =>
+    setSelectedRows(
+      selectedRows.length === currentItems.length && currentItems.length > 0
+        ? []
+        : currentItems.map(e => String(e.id))
+    )
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value)
     setCurrentPage(1)
   }
 
+  const handleRerun = (prediction: SavedPrediction) => {
+    const result: PredictionResult = JSON.parse(prediction.resultJson)
+    const params = JSON.parse(prediction.parameters)
+    navigate('/prediction/historical', {
+      state: {
+        company: prediction.company,
+        datasetId: prediction.datasetId,
+        preloadedResult: result,
+        preloadedParams: {
+          model_type: prediction.modelType,
+          p: params.p,
+          d: params.d,
+          q: params.q,
+          steps: params.steps,
+        },
+      },
+    })
+  }
+
+  const handleDelete = async (id: number) => {
+    try {
+      await deletePrediction(id)
+      setPredictions(prev => prev.filter(p => p.id !== id))
+    } catch (err) {
+      console.error("Failed to delete prediction:", err)
+    }
+  }
+
+  const formatDate = (iso: string) => new Date(iso).toLocaleDateString()
+
+  const formatParams = (paramsJson: string, modelType: string) => {
+    try {
+      const p = JSON.parse(paramsJson)
+      if (modelType === 'ARMA')   return `p=${p.p}, q=${p.q}`
+      if (modelType === 'SARIMA') return `p=${p.p}, d=${p.d}, q=${p.q}, s=12`
+      return `p=${p.p}, d=${p.d}, q=${p.q}`
+    } catch {
+      return paramsJson
+    }
+  }
+
+  // ── Not signed in ──────────────────────────────────────────────────────────
+  if (!isAuthenticated) {
+    return (
+      <BaseLayout title="History" description="View your saved predictions">
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 text-center px-4">
+          <div className="rounded-full bg-muted p-6">
+            <LogIn className="size-10 text-muted-foreground" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold">Sign in to view your history</h2>
+            <p className="text-muted-foreground max-w-sm">
+              Your prediction history is saved to your account. Sign in to access your past experiments.
+            </p>
+          </div>
+          <Button
+            size="lg"
+            onClick={() => navigate('/auth/sign-in-3', { state: { redirect: '/historic' } })}
+          >
+            Sign in
+          </Button>
+        </div>
+      </BaseLayout>
+    )
+  }
+
+  // ── Signed in ──────────────────────────────────────────────────────────────
   return (
     <BaseLayout
       title="Historic Experiments"
@@ -147,7 +160,6 @@ export default function HistoricPage() {
         <Card className="pb-0 gap-0">
           <CardHeader className="border-b border-border gap-0">
             <div className="flex flex-col sm:flex-row items-center gap-4">
-              {/* Search */}
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                 <Input
@@ -157,8 +169,6 @@ export default function HistoricPage() {
                   onChange={handleSearchChange}
                 />
               </div>
-
-              {/* Actions */}
               <div className="sm:ml-auto flex items-center gap-2 flex-wrap justify-center">
                 <Button variant="outline" size="sm" className="h-8 px-3 text-xs cursor-pointer">
                   <Filter />
@@ -185,107 +195,88 @@ export default function HistoricPage() {
           </CardHeader>
 
           <CardContent className="p-0">
-            {/* Table */}
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border bg-muted/50">
                     <th className="text-left p-4 font-medium text-sm text-muted-foreground">
                       <Checkbox
-                        checked={
-                          selectedRows.length === currentItems.length &&
-                          currentItems.length > 0
-                        }
+                        checked={selectedRows.length === currentItems.length && currentItems.length > 0}
                         onCheckedChange={toggleAll}
                       />
                     </th>
-                    <th className="text-left p-4 font-medium text-sm text-muted-foreground uppercase tracking-wider">
-                      Stock Name
-                    </th>
-                    <th className="text-left p-4 font-medium text-sm text-muted-foreground uppercase tracking-wider">
-                      Model Used
-                    </th>
-                    <th className="text-left p-4 font-medium text-sm text-muted-foreground uppercase tracking-wider">
-                      Parameters
-                    </th>
-                    <th className="text-left p-4 font-medium text-sm text-nowrap text-muted-foreground uppercase tracking-wider">
-                      Date
-                    </th>
-                    <th className="text-left p-4 font-medium text-sm text-muted-foreground uppercase tracking-wider">
-                      Actions
-                    </th>
+                    <th className="text-left p-4 font-medium text-sm text-muted-foreground uppercase tracking-wider">Stock</th>
+                    <th className="text-left p-4 font-medium text-sm text-muted-foreground uppercase tracking-wider">Model</th>
+                    <th className="text-left p-4 font-medium text-sm text-muted-foreground uppercase tracking-wider">Parameters</th>
+                    <th className="text-left p-4 font-medium text-sm text-nowrap text-muted-foreground uppercase tracking-wider">Date</th>
+                    <th className="text-left p-4 font-medium text-sm text-muted-foreground uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {currentItems.length === 0 ? (
+                  {loading ? (
                     <tr>
-                      <td
-                        colSpan={6}
-                        className="p-8 text-center text-sm text-muted-foreground"
-                      >
-                        No experiments found.
+                      <td colSpan={6} className="p-8 text-center text-sm text-muted-foreground">
+                        <Loader2 className="size-5 animate-spin mx-auto" />
+                      </td>
+                    </tr>
+                  ) : currentItems.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="p-8 text-center text-sm text-muted-foreground">
+                        {search ? 'No experiments match your search.' : 'No predictions yet. Run a prediction to see it here.'}
                       </td>
                     </tr>
                   ) : (
-                    currentItems.map((experiment) => (
+                    currentItems.map((prediction) => (
                       <tr
-                        key={experiment.id}
+                        key={prediction.id}
                         className="border-b border-border hover:bg-muted/30 transition-colors"
                       >
                         <td className="p-4">
                           <Checkbox
-                            checked={selectedRows.includes(experiment.id)}
-                            onCheckedChange={() => toggleRow(experiment.id)}
+                            checked={selectedRows.includes(String(prediction.id))}
+                            onCheckedChange={() => toggleRow(String(prediction.id))}
                           />
                         </td>
                         <td className="p-4">
-                          <span className="font-semibold text-foreground">
-                            {experiment.stockName}
-                          </span>
+                          <span className="font-semibold text-foreground">{prediction.company}</span>
                         </td>
                         <td className="p-4">
                           <Badge
                             variant="outline"
-                            className={cn(
-                              'px-2.5 py-0.5 font-semibold',
-                              MODEL_COLORS[experiment.modelUsed] ??
-                                'bg-muted text-muted-foreground',
-                            )}
+                            className={cn('px-2.5 py-0.5 font-semibold', MODEL_COLORS[prediction.modelType] ?? 'bg-muted text-muted-foreground')}
                           >
-                            {experiment.modelUsed}
+                            {prediction.modelType}
                           </Badge>
                         </td>
                         <td className="p-4">
                           <code className="text-xs bg-muted px-2 py-1 rounded text-muted-foreground">
-                            {experiment.parameters}
+                            {formatParams(prediction.parameters, prediction.modelType)}
                           </code>
                         </td>
                         <td className="p-4">
                           <span className="text-sm text-muted-foreground text-nowrap">
-                            {experiment.date}
+                            {formatDate(prediction.createdAt)}
                           </span>
                         </td>
                         <td className="p-4">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 px-3 text-xs cursor-pointer"
-                              >
-                                Actions
-                                <ChevronDown data-icon="inline-end" />
+                              <Button variant="ghost" size="sm" className="h-8 px-3 text-xs cursor-pointer">
+                                Actions <ChevronDown data-icon="inline-end" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuGroup>
-                                <DropdownMenuItem className="cursor-pointer py-2">
-                                  View Details
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="cursor-pointer py-2">
+                                <DropdownMenuItem
+                                  className="cursor-pointer py-2"
+                                  onClick={() => handleRerun(prediction)}
+                                >
                                   Re-run
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="text-destructive cursor-pointer py-2">
+                                <DropdownMenuItem
+                                  className="text-destructive cursor-pointer py-2"
+                                  onClick={() => handleDelete(prediction.id)}
+                                >
                                   Delete
                                 </DropdownMenuItem>
                               </DropdownMenuGroup>
@@ -307,32 +298,26 @@ export default function HistoricPage() {
               </div>
               <div className="flex items-center gap-2">
                 <Button
-                  variant="outline"
-                  size="icon"
+                  variant="outline" size="icon"
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
                   className="h-9 w-9 cursor-pointer"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                   <Button
                     key={page}
                     variant={currentPage === page ? 'default' : 'outline'}
                     size="icon"
                     onClick={() => setCurrentPage(page)}
-                    className={cn(
-                      'h-9 w-9',
-                      currentPage === page && 'bg-primary',
-                      'cursor-pointer',
-                    )}
+                    className={cn('h-9 w-9', currentPage === page && 'bg-primary', 'cursor-pointer')}
                   >
                     {page}
                   </Button>
                 ))}
                 <Button
-                  variant="outline"
-                  size="icon"
+                  variant="outline" size="icon"
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
                   className="h-9 w-9 cursor-pointer"

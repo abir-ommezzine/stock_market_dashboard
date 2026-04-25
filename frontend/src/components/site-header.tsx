@@ -27,10 +27,9 @@ export function SiteHeader() {
     document.addEventListener("keydown", down)
     return () => document.removeEventListener("keydown", down)
   }, [])
-  // ADDED: logout and redirect to sign-in
+  // Sign out: clear auth but stay on current page
   const handleLogout = () => {
     logout()
-    navigate("/auth/sign-in-3")
   }
 
   return (
@@ -52,7 +51,7 @@ export function SiteHeader() {
               className="hidden sm:flex dark:text-foreground"
               onClick={() => navigate('/historic')}
             >
-              Historic
+              History
             </Button>
             <Button variant="ghost" asChild size="sm" className="hidden sm:flex">
               <a
