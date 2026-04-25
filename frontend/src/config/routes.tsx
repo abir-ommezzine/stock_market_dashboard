@@ -1,9 +1,9 @@
 import { lazy } from 'react'
 import { Navigate } from 'react-router-dom'
-import { ProtectedRoute } from "@/features/prediction/components/protected-route"
 const HistoricalPricesPage = lazy(
   () => import("@/features/prediction/pages/historical_prices_page")
 )
+const Historic = lazy(() => import('@/app/historic/page'))
 // Lazy load components for better performance
 const Landing = lazy(() => import('@/app/landing/page'))
 const Dashboard = lazy(() => import('@/app/dashboard/page'))
@@ -65,11 +65,7 @@ export const routes: RouteConfig[] = [
   // Dashboard Routes
   {
     path: "/dashboard",
-     element: (
-    <ProtectedRoute>
-      <Dashboard />
-    </ProtectedRoute>
-  )
+    element: <Dashboard />
   },
   {
     path: "/dashboard-2",
@@ -192,6 +188,12 @@ export const routes: RouteConfig[] = [
   {
     path: "/settings/connections",
     element: <ConnectionSettings />
+  },
+
+  // Historic Experiments
+  {
+    path: "/historic",
+    element: <Historic />
   },
 
   // Catch-all route for 404

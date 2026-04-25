@@ -27,10 +27,9 @@ export function SiteHeader() {
     document.addEventListener("keydown", down)
     return () => document.removeEventListener("keydown", down)
   }, [])
-  // ADDED: logout and redirect to sign-in
+  // Sign out: clear auth but stay on current page
   const handleLogout = () => {
     logout()
-    navigate("/auth/sign-in-3")
   }
 
   return (
@@ -46,15 +45,13 @@ export function SiteHeader() {
             <SearchTrigger onClick={() => setSearchOpen(true)} />
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <Button variant="ghost" asChild size="sm" className="hidden sm:flex">
-              <a
-                href="https://shadcnstore.com/blocks"
-                rel="noopener noreferrer"
-                target="_blank"
-                className="dark:text-foreground"
-              >
-                Blocks
-              </a>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="hidden sm:flex dark:text-foreground"
+              onClick={() => navigate('/historic')}
+            >
+              History
             </Button>
             <Button variant="ghost" asChild size="sm" className="hidden sm:flex">
               <a

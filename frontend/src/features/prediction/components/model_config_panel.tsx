@@ -36,10 +36,19 @@ import {
 interface Props {
   datasetId: number
   symbol: string
+  preloadedParams?: {
+    model_type: "ARIMA" | "ARMA" | "SARIMA"
+    p?: number
+    d?: number
+    q?: number
+    steps?: number
+  }
   onResult: (
     predictions: PredictionPoint[],
     metrics: MetricsResult | null,
-    modelType: string
+    modelType: string,
+    usedParams: PredictionParams,
+    fullResult: PredictionResult
   ) => void
 }
 
@@ -63,19 +72,20 @@ const MODEL_INFO = {
 
 type ModelType = keyof typeof MODEL_INFO
 
-export function ModelConfigPanel({ datasetId, symbol, onResult }: Props) {
+export function ModelConfigPanel({ datasetId, symbol, preloadedParams, onResult }: Props) {
   const [step, setStep] = useState(1)
-  const [modelType, setModelType] = useState<ModelType>("ARIMA")
-  const [useDefaults, setUseDefaults] = useState(true)
+  const [modelType, setModelType] = useState<ModelType>(preloadedParams?.model_type ?? "ARIMA")
+  const [useDefaults, setUseDefaults] = useState(!preloadedParams)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // These are the param values shown in the inputs
-  // They start at (1,1,1,10) but get replaced by optimal values after first run
-  const [params, setParams] = useState({ p: 1, d: 1, q: 1, steps: 10 })
+  const [params, setParams] = useState({
+    p: preloadedParams?.p ?? 1,
+    d: preloadedParams?.d ?? 1,
+    q: preloadedParams?.q ?? 1,
+    steps: preloadedParams?.steps ?? 10,
+  })
 
-  // NEW: tracks whether the current params came from auto-optimization
-  // Used to show the "Auto-optimized" badge
   const [isOptimized, setIsOptimized] = useState(false)
 
   const setParam = (key: keyof typeof params, value: number) => {
@@ -89,8 +99,6 @@ export function ModelConfigPanel({ datasetId, symbol, onResult }: Props) {
     setError(null)
 
     try {
-      // When useDefaults is true, we send p=1,d=1,q=1 which triggers
-      // auto-selection on the Python side via auto_arima/grid search
       const payload: PredictionParams = {
         datasetId,
         model_type: modelType,
@@ -100,24 +108,19 @@ export function ModelConfigPanel({ datasetId, symbol, onResult }: Props) {
 
       const result = await runPrediction(payload)
 
-      // NEW: if Python returned optimal params, update our form fields
-      // This means next time the user runs with "Custom", they start from
-      // the optimal values rather than (1,1,1)
       if (result.optimal_params) {
         setParams(prev => ({
-          ...prev,  // keep steps as-is (user controls forecast horizon)
+          ...prev,
           p: result.optimal_params!.p,
           d: result.optimal_params!.d,
           q: result.optimal_params!.q,
         }))
-        setIsOptimized(true)   // show the "Auto-optimized" badge
-
-        // NEW: automatically switch to custom mode so the user can
-        // see the optimal values that were found and tweak them if needed
+        setIsOptimized(true)
         setUseDefaults(false)
       }
 
-      onResult(result.predictions, result.metrics, modelType)
+      // Pass full result + used params back to parent for saving
+      onResult(result.predictions, result.metrics, modelType, payload, result)
 
     } catch (err: any) {
       setError(err.message || "Prediction failed.")
