@@ -6,15 +6,17 @@ import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { CommandSearch, SearchTrigger } from "@/components/command-search"
 import { ModeToggle } from "@/components/mode-toggle"
-import { getAppUrl } from "@/lib/utils"
-import { useNavigate } from "react-router-dom"   // ADDED
-import { useAuth } from "@/contexts/auth.context" // ADDED
+import { useNavigate, useLocation } from "react-router-dom"
+import { useAuth } from "@/contexts/auth.context"
 
 export function SiteHeader() {
   const [searchOpen, setSearchOpen] = React.useState(false)
   const navigate = useNavigate()
-  const { isAuthenticated ,user,logout} = useAuth()
+  const location = useLocation()
+  const { isAuthenticated, user, logout } = useAuth()
 
+  const isHistoric   = location.pathname === "/historic"
+  const isPrediction = location.pathname === "/prediction/historical"
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -23,11 +25,10 @@ export function SiteHeader() {
         setSearchOpen((open) => !open)
       }
     }
-
     document.addEventListener("keydown", down)
     return () => document.removeEventListener("keydown", down)
   }, [])
-  // Sign out: clear auth but stay on current page
+
   const handleLogout = () => {
     logout()
   }
@@ -45,28 +46,33 @@ export function SiteHeader() {
             <SearchTrigger onClick={() => setSearchOpen(true)} />
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="hidden sm:flex dark:text-foreground"
-              onClick={() => navigate('/historic')}
-            >
-              History
-            </Button>
-            <Button variant="ghost" asChild size="sm" className="hidden sm:flex">
-              <a
-                href={getAppUrl("/landing")}
-                rel="noopener noreferrer"
-                target="_blank"
-                className="dark:text-foreground"
-              >
-                Landing Page
-              </a>
-            </Button>
 
-             {/* CHANGED: replaced GitHub link with auth-aware button */}
+            {/* Dashboard button — shown on history and prediction pages */}
+            {(isHistoric || isPrediction) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hidden sm:flex dark:text-foreground"
+                onClick={() => navigate('/dashboard-2')}
+              >
+                Dashboard
+              </Button>
+            )}
+
+            {/* History button — shown on dashboard and prediction pages, not on history page */}
+            {!isHistoric && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hidden sm:flex dark:text-foreground"
+                onClick={() => navigate('/historic')}
+              >
+                History
+              </Button>
+            )}
+
+            {/* Auth buttons */}
             {isAuthenticated ? (
-              // Logged in: show user's first name + logout button
               <div className="hidden sm:flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">
                   {user?.firstName}
@@ -81,7 +87,6 @@ export function SiteHeader() {
                 </Button>
               </div>
             ) : (
-              // Not logged in: show Sign In button
               <Button
                 variant="ghost"
                 size="sm"

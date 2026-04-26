@@ -154,7 +154,7 @@ export function ModelConfigPanel({ datasetId, symbol, hasPrediction = false, pre
       return
     }
     onSave?.()
-    toast.success("Prediction saved successfully!")
+    // Toast is shown by the parent (historical_prices_page)
   }
 
   return (

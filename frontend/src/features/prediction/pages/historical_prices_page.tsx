@@ -1,6 +1,6 @@
 "use client"
 
-import { useLocation, useNavigate } from "react-router-dom"
+import { useLocation } from "react-router-dom"
 import { useEffect, useState } from "react"
 import { fetchStockData } from "@/lib/api/stock.api"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
@@ -11,10 +11,10 @@ import type { PredictionPoint, MetricsResult, PredictionParams, PredictionResult
 import { savePrediction } from "@/lib/api/prediction_history.api"
 import { useAuth } from "@/contexts/auth.context"
 import { toast } from "sonner"
+import { BaseLayout } from "@/components/layouts/base-layout"
 
 export default function HistoricalPricesPage() {
   const location = useLocation()
-  const navigate = useNavigate()
   const { user } = useAuth()
 
   // On return from sign-in, location.state may be the restored page state
@@ -83,15 +83,7 @@ export default function HistoricalPricesPage() {
     setUsedModel(modelType)
     setLastParams(usedParams)
     setLastResult(fullResult)
-
-    // Auto-save only if signed in
-    if (user) {
-      try {
-        await savePrediction(user.id, company, datasetId, usedParams, fullResult)
-      } catch (err) {
-        console.warn("Could not save prediction to history:", err)
-      }
-    }
+    // No auto-save here — user clicks Save explicitly
   }
 
   const handleClearPrediction = () => {
@@ -109,6 +101,7 @@ export default function HistoricalPricesPage() {
   }
 
   return (
+    <BaseLayout>
     <div className="p-6 space-y-6">
       <Card>
         <CardHeader>
@@ -138,5 +131,6 @@ export default function HistoricalPricesPage() {
 
       <MetricsCards metrics={metrics} modelType={usedModel} />
     </div>
+    </BaseLayout>
   )
 }
