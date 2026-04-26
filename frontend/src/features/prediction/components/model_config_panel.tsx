@@ -338,6 +338,22 @@ export function ModelConfigPanel({ datasetId, symbol, hasPrediction = false, pre
               <p className="text-sm text-destructive">{error}</p>
             )}
 
+            {/* Loading overlay while prediction is running */}
+            {loading && (
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 flex flex-col items-center gap-3">
+                <div className="relative flex items-center justify-center">
+                  <Loader2 className="size-8 animate-spin text-primary" />
+                  <div className="absolute size-12 rounded-full border-2 border-primary/20 animate-ping" />
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-medium text-primary">Running prediction...</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Training {modelType} model, this may take a moment
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className="flex gap-2 pt-2">
               <Button
                 variant="outline"
