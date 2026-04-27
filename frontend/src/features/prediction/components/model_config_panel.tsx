@@ -35,7 +35,6 @@ import {
   type MetricsResult
 } from "@/lib/api/prediction.api"
 import { useAuth } from "@/contexts/auth.context"
-import { toast } from "sonner"
 
 interface Props {
   datasetId: number
