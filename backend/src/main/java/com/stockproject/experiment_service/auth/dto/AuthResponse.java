@@ -1,5 +1,6 @@
 package com.stockproject.experiment_service.auth.dto;
 
+import com.stockproject.experiment_service.auth.model.Role;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -11,4 +12,5 @@ public class AuthResponse {
     private String email;
     private String firstName;
     private String lastName;
+    private String role;
 }

@@ -30,6 +30,13 @@ public class PredictionService {
         return new PredictionResponse(predictionRepository.save(prediction));
     }
 
+    public List<PredictionResponse> getAll() {
+        return predictionRepository.findAll()
+                .stream()
+                .map(PredictionResponse::new)
+                .collect(Collectors.toList());
+    }
+
     public List<PredictionResponse> getByUser(Long userId) {
         return predictionRepository.findByUserIdOrderByCreatedAtDesc(userId)
                 .stream()

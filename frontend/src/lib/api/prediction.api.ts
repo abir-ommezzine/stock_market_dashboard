@@ -1,7 +1,7 @@
 // This file handles all ML/prediction related API calls to the Java backend
 // Java then forwards them to the Python FastAPI service
 
-const API = "http://localhost:8083/api"
+import { apiFetch } from "./api"
 
 export interface PredictionPoint {
   date: string   // "2015-03-03"
@@ -39,9 +39,8 @@ export interface PredictionParams {
 // Calls POST /api/ml/train-from-dataset on the Java backend
 // Java fetches prices from DB, sends to Python, returns predictions
 export async function runPrediction(params: PredictionParams): Promise<PredictionResult> {
-  const res = await fetch(`${API}/ml/train-from-dataset`, {
+  const res = await apiFetch("/api/ml/train-from-dataset", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(params),
   })
 

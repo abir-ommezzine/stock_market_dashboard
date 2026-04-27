@@ -4,6 +4,7 @@ import type { AuthUser } from "@/lib/api/auth.api"
 interface AuthContextType {
   user: AuthUser | null
   isAuthenticated: boolean
+  isAdmin: boolean
   login: (user: AuthUser) => void
   logout: () => void
   getToken: () => string | null
@@ -46,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider value={{
       user,
       isAuthenticated: user !== null,
+      isAdmin: user?.role === "ADMIN",
       login,
       logout,
       getToken,

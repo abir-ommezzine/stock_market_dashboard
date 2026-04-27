@@ -3,9 +3,12 @@
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Loader2, Search, X } from "lucide-react"
+import { Loader2, Search, X, Star } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/contexts/auth.context"
+import { watchlistApi } from "@/lib/api/watchlist.api"
+import { toast } from "sonner"
 
 interface Props {
   dataInput: any
@@ -18,8 +21,10 @@ export function CompanySelection({ dataInput, onBack }: Props) {
   const [symbols, setSymbols]   = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [open, setOpen]         = useState(false)
+  const [isInWatchlist, setIsInWatchlist] = useState(false)
   const containerRef            = useRef<HTMLDivElement>(null)
   const navigate                = useNavigate()
+  const { isAuthenticated, user } = useAuth()
 
   // Fetch symbols when component loads
   useEffect(() => {
@@ -44,6 +49,48 @@ export function CompanySelection({ dataInput, onBack }: Props) {
     return () => document.removeEventListener("mousedown", handler)
   }, [])
 
+  // Check watchlist status when company changes
+  useEffect(() => {
+    if (isAuthenticated && user && company) {
+      checkWatchlistStatus()
+    }
+  }, [isAuthenticated, user, company])
+
+  const checkWatchlistStatus = async () => {
+    if (!user || !company) return
+    try {
+      const exists = await watchlistApi.isInWatchlist(user.id, company)
+      setIsInWatchlist(exists)
+    } catch (error) {
+      console.error('Failed to check watchlist status:', error)
+    }
+  }
+
+  const handleAddToWatchlist = async () => {
+    if (!isAuthenticated || !user) {
+      navigate("/auth/sign-in-3")
+      return
+    }
+
+    if (!company) {
+      toast.error('Please select a symbol first')
+      return
+    }
+
+    try {
+      await watchlistApi.addToWatchlist({ userId: user.id, symbol: company })
+      setIsInWatchlist(true)
+      toast.success(`${company} added to watchlist`)
+    } catch (error: any) {
+      if (error.response?.data?.error?.includes('already in watchlist')) {
+        toast.info(`${company} is already in your watchlist`)
+        setIsInWatchlist(true)
+      } else {
+        toast.error('Failed to add to watchlist')
+      }
+    }
+  }
+
   const filtered = symbols.filter(s =>
     s.toLowerCase().startsWith(query.toLowerCase()) ||
     s.toLowerCase().includes(query.toLowerCase())
@@ -53,6 +100,7 @@ export function CompanySelection({ dataInput, onBack }: Props) {
     setCompany(symbol)
     setQuery(symbol)
     setOpen(false)
+    setIsInWatchlist(false) // Reset watchlist status, will be checked in useEffect
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -134,9 +182,23 @@ export function CompanySelection({ dataInput, onBack }: Props) {
 
         {/* Show selected symbol as a badge */}
         {company && !open && (
-          <p className="text-xs text-muted-foreground">
-            Selected: <span className="font-semibold text-foreground">{company}</span>
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              Selected: <span className="font-semibold text-foreground">{company}</span>
+            </p>
+            {isAuthenticated && (
+              <Button
+                size="sm"
+                variant={isInWatchlist ? "secondary" : "outline"}
+                onClick={handleAddToWatchlist}
+                className="flex items-center gap-1 h-6 px-2 text-xs"
+                disabled={isInWatchlist}
+              >
+                <Star className={`size-3 ${isInWatchlist ? "fill-current" : ""}`} />
+                {isInWatchlist ? "Watching" : "Watch"}
+              </Button>
+            )}
+          </div>
         )}
       </div>
 
