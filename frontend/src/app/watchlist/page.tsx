@@ -1,20 +1,37 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth.context';
 import { watchlistApi, type WatchlistItem } from '@/lib/api/watchlist.api';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, TrendingUp, Activity } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Trash2, TrendingUp, Activity, Plus, Loader2, Search, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 export default function WatchlistPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [newSymbol, setNewSymbol] = useState('');
+  const [addingSymbol, setAddingSymbol] = useState(false);
+  const [symbols, setSymbols] = useState<string[]>([]);
+  const [loadingSymbols, setLoadingSymbols] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!user) {
@@ -24,6 +41,36 @@ export default function WatchlistPage() {
 
     loadWatchlist();
   }, [user, navigate]);
+
+  useEffect(() => {
+    if (addDialogOpen && symbols.length === 0) {
+      loadSymbols();
+    }
+  }, [addDialogOpen]);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const loadSymbols = async () => {
+    setLoadingSymbols(true);
+    try {
+      const response = await fetch('http://localhost:8083/api/datasets/1/symbols');
+      const data = await response.json();
+      setSymbols(data.filter((s: string) => s && s.trim() !== ''));
+    } catch (error) {
+      console.error('Failed to fetch symbols:', error);
+      toast.error('Failed to load stock symbols');
+    } finally {
+      setLoadingSymbols(false);
+    }
+  };
 
   const loadWatchlist = async () => {
     if (!user) return;
@@ -57,6 +104,50 @@ export default function WatchlistPage() {
     navigate(`/prediction/historical?symbol=${symbol}`);
   };
 
+  const handleAddSymbol = async () => {
+    if (!user || !newSymbol.trim()) return
+    
+    setAddingSymbol(true)
+    try {
+      await watchlistApi.addToWatchlist({ userId: user.id, symbol: newSymbol.toUpperCase() })
+      const updatedWatchlist = await watchlistApi.getUserWatchlist(user.id)
+      setWatchlist(updatedWatchlist)
+      toast.success(`${newSymbol.toUpperCase()} added to watchlist`)
+      setNewSymbol('')
+      setAddDialogOpen(false)
+      setDropdownOpen(false)
+    } catch (error: any) {
+      if (error.response?.data?.error?.includes('already in watchlist')) {
+        toast.info(`${newSymbol.toUpperCase()} is already in your watchlist`)
+      } else {
+        toast.error('Failed to add to watchlist')
+      }
+    } finally {
+      setAddingSymbol(false)
+    }
+  };
+
+  const handleSelectSymbol = (symbol: string) => {
+    setNewSymbol(symbol);
+    setDropdownOpen(false);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.toUpperCase();
+    setNewSymbol(val);
+    setDropdownOpen(val.length > 0);
+  };
+
+  const handleClear = () => {
+    setNewSymbol('');
+    setDropdownOpen(false);
+  };
+
+  const filteredSymbols = symbols.filter(s =>
+    s.toLowerCase().startsWith(newSymbol.toLowerCase()) ||
+    s.toLowerCase().includes(newSymbol.toLowerCase())
+  );
+
   if (!user) {
     return null;
   }
@@ -78,8 +169,9 @@ export default function WatchlistPage() {
             Track your favorite stocks and monitor their performance
           </p>
         </div>
-        <Button onClick={() => navigate('/prediction/historical')}>
-          Add New Stock
+        <Button onClick={() => setAddDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Stock
         </Button>
       </div>
 
@@ -91,7 +183,8 @@ export default function WatchlistPage() {
             <p className="text-muted-foreground text-center mb-4">
               Start adding stocks to track their performance and get quick access to predictions.
             </p>
-            <Button onClick={() => navigate('/prediction/historical')}>
+            <Button onClick={() => setAddDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
               Add Your First Stock
             </Button>
           </CardContent>
@@ -157,6 +250,94 @@ export default function WatchlistPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Add Stock Dialog */}
+      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Stock to Watchlist</DialogTitle>
+            <DialogDescription>
+              Enter a stock symbol to add it to your watchlist (e.g., AAPL, TSLA, GOOGL)
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div ref={containerRef} className="relative">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  placeholder="Search symbol (e.g. AAPL, TSLA...)"
+                  value={newSymbol}
+                  onChange={handleInputChange}
+                  onFocus={() => newSymbol.length > 0 && setDropdownOpen(true)}
+                  className="pl-9 pr-9"
+                  autoComplete="off"
+                  autoFocus
+                />
+                {newSymbol && (
+                  <button
+                    onClick={handleClear}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="size-4" />
+                  </button>
+                )}
+              </div>
+
+              {dropdownOpen && (
+                <div className="absolute z-50 mt-1 w-full rounded-md border border-border bg-popover shadow-md max-h-52 overflow-y-auto">
+                  {loadingSymbols ? (
+                    <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
+                      <Loader2 className="size-4 animate-spin" />
+                      Loading symbols...
+                    </div>
+                  ) : filteredSymbols.length === 0 ? (
+                    <div className="px-3 py-2 text-sm text-muted-foreground">
+                      No symbols match "{newSymbol}"
+                    </div>
+                  ) : (
+                    filteredSymbols.map(symbol => (
+                      <button
+                        key={symbol}
+                        onMouseDown={() => handleSelectSymbol(symbol)}
+                        className={cn(
+                          "w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors",
+                          newSymbol === symbol && "bg-primary/10 text-primary font-medium"
+                        )}
+                      >
+                        {symbol}
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+
+            {newSymbol && !dropdownOpen && (
+              <p className="text-xs text-muted-foreground">
+                Selected: <span className="font-semibold text-foreground">{newSymbol}</span>
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleAddSymbol} 
+              disabled={!newSymbol.trim() || addingSymbol}
+            >
+              {addingSymbol ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Adding...
+                </>
+              ) : (
+                'Add Stock'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

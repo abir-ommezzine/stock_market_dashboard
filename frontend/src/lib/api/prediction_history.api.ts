@@ -42,7 +42,7 @@ export async function savePrediction(
 }
 
 export async function getUserPredictions(userId: number): Promise<SavedPrediction[]> {
-  const res = await fetch(`${API}/api/predictions/user/${userId}`)
+  const res = await apiFetch(`/api/predictions/user/${userId}`)
   if (!res.ok) throw new Error("Failed to fetch predictions")
   return res.json()
 }
