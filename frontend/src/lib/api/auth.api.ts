@@ -19,6 +19,7 @@ export interface AuthUser {
   firstName: string
   lastName: string
   token: string
+  role: "USER" | "ADMIN"
 }
 
 export async function login(credentials: LoginCredentials): Promise<AuthUser> {

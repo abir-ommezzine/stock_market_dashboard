@@ -23,6 +23,11 @@ public class PredictionController {
         return ResponseEntity.ok(predictionService.save(req));
     }
 
+    @GetMapping
+    public ResponseEntity<List<PredictionResponse>> getAll() {
+        return ResponseEntity.ok(predictionService.getAll());
+    }
+
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<PredictionResponse>> getByUser(@PathVariable Long userId) {
         return ResponseEntity.ok(predictionService.getByUser(userId));

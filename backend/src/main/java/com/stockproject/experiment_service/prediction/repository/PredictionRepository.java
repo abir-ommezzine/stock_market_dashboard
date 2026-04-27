@@ -9,4 +9,5 @@ import java.util.List;
 public interface PredictionRepository extends JpaRepository<Prediction, Long> {
     List<Prediction> findByUserIdOrderByCreatedAtDesc(Long userId);
     void deleteByCreatedAtBefore(LocalDateTime cutoff);
+    long countByUserId(Long userId);
 }

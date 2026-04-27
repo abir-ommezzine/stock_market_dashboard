@@ -45,7 +45,11 @@ export function LoginForm3({
     try {
       const user = await loginApi({ email, password })
       login(user)
-      navigate(redirectTo, { state: redirectState })
+      if (user.role === "ADMIN") {
+        navigate("/admin")
+      } else {
+        navigate(redirectTo, { state: redirectState })
+      }
     } catch (err: any) {
       setError("Invalid email or password.")
     } finally {

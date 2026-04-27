@@ -1,10 +1,3 @@
-// CHANGES:
-// 1. Added lower/upper confidence interval bands for future predictions
-// 2. Merged lower/upper into chartData map alongside future values
-// 3. Added ReferenceArea-style confidence band using two overlapping Areas
-// 4. Added "showConfidence" toggle so user can hide/show the band
-// 5. Always include backtest points in filtered data (same as future)
-
 "use client"
 
 import * as React from "react"
@@ -42,7 +35,6 @@ const chartConfig = {
     label: "Forecast",
     color: "var(--chart-2)",
   },
-  // NEW: upper/lower bounds for confidence interval — no label in legend
   upper: {
     label: "Upper bound",
     color: "var(--chart-2)",
@@ -54,12 +46,23 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export function ChartAreaInteractive({ data, predictions }: Props) {
-  if (!data) return <div>Loading chart...</div>
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    return (
+      <Card className="@container/card">
+        <CardHeader>
+          <CardTitle>Stock Price — Historical & Forecast</CardTitle>
+          <CardDescription>No data available</CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-[300px]">
+          <p className="text-muted-foreground">No chart data to display</p>
+        </CardContent>
+      </Card>
+    )
+  }
 
   const isMobile = useIsMobile()
   const [timeRange, setTimeRange] = React.useState("90d")
 
-  // NEW: toggle to show/hide the confidence interval band
   const [showConfidence, setShowConfidence] = React.useState(true)
 
   React.useEffect(() => {
@@ -80,14 +83,13 @@ export function ChartAreaInteractive({ data, predictions }: Props) {
       .filter(p => p.type === "backtest")
       .map(p => ({ date: p.date, backtest: p.value }))
 
-    // CHANGED: also extract lower/upper from future predictions
     const future = predictions
       .filter(p => p.type === "future")
       .map(p => ({
         date:    p.date,
         future:  p.value,
-        lower:   p.lower,   // confidence interval lower bound (may be undefined)
-        upper:   p.upper,   // confidence interval upper bound (may be undefined)
+        lower:   p.lower,
+        upper:   p.upper,
       }))
 
     return { backtestData: backtest, futureData: future }
@@ -105,13 +107,12 @@ export function ChartAreaInteractive({ data, predictions }: Props) {
       map.set(p.date, { ...existing, backtest: p.backtest })
     })
 
-    // CHANGED: merge lower/upper alongside future values
     futureData.forEach(p => {
       const existing = map.get(p.date) || { date: p.date }
       map.set(p.date, {
         ...existing,
         future: p.future,
-        lower:  p.lower,  // undefined if model didn't return confidence intervals
+        lower:  p.lower,
         upper:  p.upper,
       })
     })
@@ -132,8 +133,8 @@ export function ChartAreaInteractive({ data, predictions }: Props) {
 
     return chartData.filter(item =>
       new Date(item.date) >= startDate ||
-      item.future   !== undefined ||  // always show future predictions
-      item.backtest !== undefined      // CHANGED: also always show backtest
+      item.future   !== undefined ||
+      item.backtest !== undefined
     )
   }, [chartData, historicalData, timeRange])
 

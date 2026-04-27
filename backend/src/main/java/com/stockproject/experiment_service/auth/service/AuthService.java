@@ -3,6 +3,7 @@ package com.stockproject.experiment_service.auth.service;
 import com.stockproject.experiment_service.auth.dto.AuthResponse;
 import com.stockproject.experiment_service.auth.dto.LoginRequest;
 import com.stockproject.experiment_service.auth.dto.RegisterRequest;
+import com.stockproject.experiment_service.auth.model.Role;
 import com.stockproject.experiment_service.auth.model.User;
 import com.stockproject.experiment_service.auth.repository.UserRepository;
 import com.stockproject.experiment_service.auth.util.JwtUtil;
@@ -36,13 +37,14 @@ public class AuthService {
                 .lastName(request.getLastName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
+                .role(Role.USER)
                 .build();
 
         userRepository.save(user);
 
         String token = jwtUtil.generateToken(user.getEmail());
         return new AuthResponse(token, user.getId(), user.getEmail(),
-                user.getFirstName(), user.getLastName());
+                user.getFirstName(), user.getLastName(), user.getRole().name());
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -55,6 +57,6 @@ public class AuthService {
 
         String token = jwtUtil.generateToken(user.getEmail());
         return new AuthResponse(token, user.getId(), user.getEmail(),
-                user.getFirstName(), user.getLastName());
+                user.getFirstName(), user.getLastName(), user.getRole().name());
     }
 }

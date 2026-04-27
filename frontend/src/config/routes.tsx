@@ -4,6 +4,8 @@ const HistoricalPricesPage = lazy(
   () => import("@/features/prediction/pages/historical_prices_page")
 )
 const Historic = lazy(() => import('@/app/historic/page'))
+const Watchlist = lazy(() => import('@/app/watchlist/page'))
+const Admin = lazy(() => import('@/app/admin/page'))
 // Lazy load components for better performance
 const Landing = lazy(() => import('@/app/landing/page'))
 const Dashboard = lazy(() => import('@/app/dashboard/page'))
@@ -194,6 +196,18 @@ export const routes: RouteConfig[] = [
   {
     path: "/historic",
     element: <Historic />
+  },
+
+  // Watchlist
+  {
+    path: "/watchlist",
+    element: <Watchlist />
+  },
+
+  // Admin
+  {
+    path: "/admin",
+    element: <Admin />
   },
 
   // Catch-all route for 404

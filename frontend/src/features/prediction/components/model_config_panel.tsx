@@ -1,12 +1,6 @@
-// CHANGES:
-// 1. Added optimalParams state
-// 2. When prediction returns, update params state with optimal values
-// 3. Switch to custom mode automatically so user can see and edit the values
-// 4. Added a badge showing "Auto-optimized" next to the values
-
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -26,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, BrainCircuit, Loader2, Save, Settings2, Sparkles, Zap } from "lucide-react"
+import { ArrowLeft, BrainCircuit, Loader2, Save, Settings2, Sparkles, Zap, Star } from "lucide-react"
 import {
   runPrediction,
   type PredictionPoint,
@@ -34,7 +28,9 @@ import {
   type PredictionResult,
   type MetricsResult
 } from "@/lib/api/prediction.api"
+import { watchlistApi } from "@/lib/api/watchlist.api"
 import { useAuth } from "@/contexts/auth.context"
+import { toast } from "sonner"
 
 interface Props {
   datasetId: number
@@ -84,8 +80,9 @@ export function ModelConfigPanel({ datasetId, symbol, hasPrediction = false, pre
   const [useDefaults, setUseDefaults] = useState(!preloadedParams)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isInWatchlist, setIsInWatchlist] = useState(false)
 
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -97,6 +94,57 @@ export function ModelConfigPanel({ datasetId, symbol, hasPrediction = false, pre
   })
 
   const [isOptimized, setIsOptimized] = useState(false)
+
+  // Check if symbol is in watchlist when component mounts
+  React.useEffect(() => {
+    if (isAuthenticated && user && symbol) {
+      checkWatchlistStatus()
+    }
+  }, [isAuthenticated, user, symbol])
+
+  const checkWatchlistStatus = async () => {
+    if (!user || !symbol) return
+    try {
+      const exists = await watchlistApi.isInWatchlist(user.id, symbol)
+      setIsInWatchlist(exists)
+    } catch (error) {
+      console.error('Failed to check watchlist status:', error)
+    }
+  }
+
+  const handleAddToWatchlist = async () => {
+    if (!isAuthenticated || !user) {
+      navigate("/auth/sign-in-3", {
+        state: { redirect: location.pathname }
+      })
+      return
+    }
+
+    try {
+      await watchlistApi.addToWatchlist({ userId: user.id, symbol })
+      setIsInWatchlist(true)
+      toast.success(`${symbol} added to watchlist`)
+    } catch (error: any) {
+      if (error.response?.data?.error?.includes('already in watchlist')) {
+        toast.info(`${symbol} is already in your watchlist`)
+        setIsInWatchlist(true)
+      } else {
+        toast.error('Failed to add to watchlist')
+      }
+    }
+  }
+
+  const handleRemoveFromWatchlist = async () => {
+    if (!user) return
+
+    try {
+      await watchlistApi.removeFromWatchlist(user.id, symbol)
+      setIsInWatchlist(false)
+      toast.success(`${symbol} removed from watchlist`)
+    } catch (error) {
+      toast.error('Failed to remove from watchlist')
+    }
+  }
 
   const setParam = (key: keyof typeof params, value: number) => {
     setParams(prev => ({ ...prev, [key]: value }))
@@ -187,7 +235,6 @@ export function ModelConfigPanel({ datasetId, symbol, hasPrediction = false, pre
 
       <CardContent className="space-y-4">
 
-        {/* ── STEP 1: Choose Model ── */}
         {step === 1 && (
           <div className="space-y-3">
             {(Object.keys(MODEL_INFO) as ModelType[]).map(model => (
@@ -224,7 +271,6 @@ export function ModelConfigPanel({ datasetId, symbol, hasPrediction = false, pre
           </div>
         )}
 
-        {/* ── STEP 2: Configure Parameters ── */}
         {step === 2 && (
           <div className="space-y-4">
 
@@ -265,7 +311,6 @@ export function ModelConfigPanel({ datasetId, symbol, hasPrediction = false, pre
             {!useDefaults && (
               <div className="space-y-3 rounded-lg border p-4">
 
-                {/* NEW: show badge if params were auto-optimized */}
                 {isOptimized && (
                   <div className="flex items-center gap-2 rounded-md bg-primary/5 border border-primary/20 px-3 py-2">
                     <Sparkles className="size-3.5 text-primary" />
@@ -375,6 +420,20 @@ export function ModelConfigPanel({ datasetId, symbol, hasPrediction = false, pre
                   ? <><Loader2 className="size-4 animate-spin mr-2" /> Running...</>
                   : "Run Prediction"}
               </Button>
+
+              {/* Watchlist button */}
+              {isAuthenticated && (
+                <Button
+                  size="sm"
+                  variant={isInWatchlist ? "secondary" : "outline"}
+                  onClick={isInWatchlist ? handleRemoveFromWatchlist : handleAddToWatchlist}
+                  className="flex items-center gap-1"
+                  title={isInWatchlist ? "Remove from watchlist" : "Add to watchlist"}
+                >
+                  <Star className={`size-4 ${isInWatchlist ? "fill-current" : ""}`} />
+                  {isInWatchlist ? "Watching" : "Watch"}
+                </Button>
+              )}
 
               <Button
                 size="sm"

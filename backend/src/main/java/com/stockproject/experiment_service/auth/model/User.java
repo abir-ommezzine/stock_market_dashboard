@@ -1,11 +1,7 @@
 package com.stockproject.experiment_service.auth.model;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -26,7 +22,7 @@ public class User {
     private String email;
 
     @Column(nullable = false)
-    private String password; // BCrypt hashed
+    private String password;
 
     @Column(nullable = false)
     private String firstName;
@@ -34,11 +30,16 @@ public class User {
     @Column(nullable = false)
     private String lastName;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private Role role = Role.USER;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        if (this.createdAt == null) this.createdAt = LocalDateTime.now();
     }
 }

@@ -17,6 +17,8 @@ export function SiteHeader() {
 
   const isHistoric   = location.pathname === "/historic"
   const isPrediction = location.pathname === "/prediction/historical"
+  const isWatchlist  = location.pathname === "/watchlist"
+  const isAdmin      = location.pathname === "/admin"
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -47,8 +49,8 @@ export function SiteHeader() {
           </div>
           <div className="ml-auto flex items-center gap-2">
 
-            {/* Dashboard button — shown on history and prediction pages */}
-            {(isHistoric || isPrediction) && (
+            {/* Dashboard button — shown on history, prediction, watchlist, and admin pages */}
+            {(isHistoric || isPrediction || isWatchlist || isAdmin) && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -59,7 +61,19 @@ export function SiteHeader() {
               </Button>
             )}
 
-            {/* History button — shown on dashboard and prediction pages, not on history page */}
+            {/* Watchlist button — shown to all authenticated users */}
+            {isAuthenticated && !isWatchlist && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hidden sm:flex dark:text-foreground"
+                onClick={() => navigate('/watchlist')}
+              >
+                Watchlist
+              </Button>
+            )}
+
+            {/* History button — always shown except on history page */}
             {!isHistoric && (
               <Button
                 variant="ghost"
