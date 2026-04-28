@@ -31,7 +31,6 @@ public class SecurityConfig {
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Public endpoints — no token needed
                 .requestMatchers(
                     "/api/auth/**",
                     "/api/status",
@@ -39,12 +38,12 @@ public class SecurityConfig {
                     "/api/stocks/**",
                     "/api/ml/**",
                     "/api/predictions/**",
+                    "/api/watchlist/**",
                     "/api/admin/**",
                     "/v3/api-docs/**",
                     "/swagger-ui/**",
                     "/swagger-ui.html"
                 ).permitAll()
-                // Everything else requires a valid JWT
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

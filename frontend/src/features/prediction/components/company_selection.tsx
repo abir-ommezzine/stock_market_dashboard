@@ -66,7 +66,7 @@ export function CompanySelection({ dataInput, onBack }: Props) {
     }
   }
 
-  const handleAddToWatchlist = async () => {
+  const handleToggleWatchlist = async () => {
     if (!isAuthenticated || !user) {
       navigate("/auth/sign-in-3")
       return
@@ -78,15 +78,21 @@ export function CompanySelection({ dataInput, onBack }: Props) {
     }
 
     try {
-      await watchlistApi.addToWatchlist({ userId: user.id, symbol: company })
-      setIsInWatchlist(true)
-      toast.success(`${company} added to watchlist`)
+      if (isInWatchlist) {
+        await watchlistApi.removeFromWatchlist(user.id, company)
+        setIsInWatchlist(false)
+        toast.success(`${company} removed from watchlist`)
+      } else {
+        await watchlistApi.addToWatchlist({ userId: user.id, symbol: company })
+        setIsInWatchlist(true)
+        toast.success(`${company} added to watchlist`)
+      }
     } catch (error: any) {
       if (error.response?.data?.error?.includes('already in watchlist')) {
         toast.info(`${company} is already in your watchlist`)
         setIsInWatchlist(true)
       } else {
-        toast.error('Failed to add to watchlist')
+        toast.error(`Failed to ${isInWatchlist ? 'remove from' : 'add to'} watchlist`)
       }
     }
   }
@@ -190,9 +196,8 @@ export function CompanySelection({ dataInput, onBack }: Props) {
               <Button
                 size="sm"
                 variant={isInWatchlist ? "secondary" : "outline"}
-                onClick={handleAddToWatchlist}
+                onClick={handleToggleWatchlist}
                 className="flex items-center gap-1 h-6 px-2 text-xs"
-                disabled={isInWatchlist}
               >
                 <Star className={`size-3 ${isInWatchlist ? "fill-current" : ""}`} />
                 {isInWatchlist ? "Watching" : "Watch"}

@@ -19,6 +19,7 @@ import { Trash2, TrendingUp, Activity, Plus, Loader2, Search, X } from 'lucide-r
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { BaseLayout } from '@/components/layouts/base-layout';
 
 export default function WatchlistPage() {
   const { user } = useAuth();
@@ -154,14 +155,17 @@ export default function WatchlistPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
+      <BaseLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </BaseLayout>
     );
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <BaseLayout>
+      <div className="container mx-auto px-4 lg:px-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">My Watchlist</h1>
@@ -339,5 +343,6 @@ export default function WatchlistPage() {
         </DialogContent>
       </Dialog>
     </div>
+    </BaseLayout>
   );
 }
