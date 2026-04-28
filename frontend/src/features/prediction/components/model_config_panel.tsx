@@ -112,7 +112,7 @@ export function ModelConfigPanel({ datasetId, symbol, hasPrediction = false, pre
     }
   }
 
-  const handleAddToWatchlist = async () => {
+  const handleToggleWatchlist = async () => {
     if (!isAuthenticated || !user) {
       navigate("/auth/sign-in-3", {
         state: { redirect: location.pathname }
@@ -121,28 +121,22 @@ export function ModelConfigPanel({ datasetId, symbol, hasPrediction = false, pre
     }
 
     try {
-      await watchlistApi.addToWatchlist({ userId: user.id, symbol })
-      setIsInWatchlist(true)
-      toast.success(`${symbol} added to watchlist`)
+      if (isInWatchlist) {
+        await watchlistApi.removeFromWatchlist(user.id, symbol)
+        setIsInWatchlist(false)
+        toast.success(`${symbol} removed from watchlist`)
+      } else {
+        await watchlistApi.addToWatchlist({ userId: user.id, symbol })
+        setIsInWatchlist(true)
+        toast.success(`${symbol} added to watchlist`)
+      }
     } catch (error: any) {
       if (error.response?.data?.error?.includes('already in watchlist')) {
         toast.info(`${symbol} is already in your watchlist`)
         setIsInWatchlist(true)
       } else {
-        toast.error('Failed to add to watchlist')
+        toast.error(`Failed to ${isInWatchlist ? 'remove from' : 'add to'} watchlist`)
       }
-    }
-  }
-
-  const handleRemoveFromWatchlist = async () => {
-    if (!user) return
-
-    try {
-      await watchlistApi.removeFromWatchlist(user.id, symbol)
-      setIsInWatchlist(false)
-      toast.success(`${symbol} removed from watchlist`)
-    } catch (error) {
-      toast.error('Failed to remove from watchlist')
     }
   }
 
@@ -398,7 +392,7 @@ export function ModelConfigPanel({ datasetId, symbol, hasPrediction = false, pre
               </div>
             )}
 
-            <div className="flex gap-2 pt-2">
+            <div className="flex flex-wrap gap-2 pt-2">
               <Button
                 variant="outline"
                 onClick={() => {
@@ -412,7 +406,7 @@ export function ModelConfigPanel({ datasetId, symbol, hasPrediction = false, pre
 
               <Button
                 size="sm"
-                className="flex-1"
+                className="flex-1 min-w-[120px]"
                 onClick={handleRun}
                 disabled={loading}
               >
@@ -426,7 +420,7 @@ export function ModelConfigPanel({ datasetId, symbol, hasPrediction = false, pre
                 <Button
                   size="sm"
                   variant={isInWatchlist ? "secondary" : "outline"}
-                  onClick={isInWatchlist ? handleRemoveFromWatchlist : handleAddToWatchlist}
+                  onClick={handleToggleWatchlist}
                   className="flex items-center gap-1"
                   title={isInWatchlist ? "Remove from watchlist" : "Add to watchlist"}
                 >

@@ -27,6 +27,7 @@ services:
       - SPRING_DATASOURCE_USERNAME=user
       - SPRING_DATASOURCE_PASSWORD=password
       - UPLOAD_DIR=/app/uploads
+      - GMAIL_APP_PASSWORD=${GMAIL_APP_PASSWORD}
     volumes:
       - uploads_data:/app/uploads
     networks:

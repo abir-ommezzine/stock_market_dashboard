@@ -1,16 +1,14 @@
 import { apiFetch } from "./api"
 import type { PredictionResult, PredictionParams } from "./prediction.api"
 
-const API = "http://localhost:8083"
-
 export interface SavedPrediction {
   id: number
   userId: number
   company: string
   datasetId: number
   modelType: string
-  parameters: string        // JSON string
-  resultJson: string        // JSON string of PredictionResult
+  parameters: string
+  resultJson: string
   createdAt: string
 }
 
