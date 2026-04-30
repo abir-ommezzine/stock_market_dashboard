@@ -48,21 +48,21 @@ export async function searchUsers(q: string): Promise<UserSummary[]> {
 export async function getAllPredictions(): Promise<PredictionSummary[]> {
   const res = await apiFetch("/api/predictions")
   if (!res.ok) throw new Error("Failed to fetch predictions")
-  const predictions = await res.json()
+  const predictions: any[] = await res.json()
   
   // Fetch all users to map userId to user details
   const usersRes = await apiFetch("/api/admin/users")
-  const users = usersRes.ok ? await usersRes.json() : []
+  const users: UserSummary[] = usersRes.ok ? await usersRes.json() : []
   
-  const userMap = new Map(users.map((u: any) => [u.id, u]))
+  const userMap = new Map<number, UserSummary>(users.map((u) => [u.id, u]))
   
-  return predictions.map((p: any) => {
-    const user = userMap.get(p.userId) as any
+  return predictions.map((p) => {
+    const user = userMap.get(p.userId) || { email: 'Unknown', firstName: 'Unknown', lastName: '' }
     return {
       id: p.id,
       userId: p.userId,
-      userEmail: user?.email || 'Unknown',
-      userName: user ? `${user.firstName} ${user.lastName}` : 'Unknown',
+      userEmail: user.email,
+      userName: `${user.firstName} ${user.lastName}`.trim() || 'Unknown',
       company: p.company,
       modelType: p.modelType,
       createdAt: p.createdAt,

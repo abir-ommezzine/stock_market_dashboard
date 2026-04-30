@@ -7,8 +7,8 @@ export interface SavedPrediction {
   company: string
   datasetId: number
   modelType: string
-  parameters: string        // JSON string
-  resultJson: string        // JSON string of PredictionResult
+  parameters: string
+  resultJson: string
   createdAt: string
 }
 
