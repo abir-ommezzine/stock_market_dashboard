@@ -57,7 +57,7 @@ export async function getAllPredictions(): Promise<PredictionSummary[]> {
   const userMap = new Map(users.map((u: any) => [u.id, u]))
   
   return predictions.map((p: any) => {
-    const user = userMap.get(p.userId)
+    const user = userMap.get(p.userId) as any
     return {
       id: p.id,
       userId: p.userId,
