@@ -40,7 +40,12 @@ export function SignupForm3({
     e.preventDefault()
     setError(null)
 
-    // Client-side validation
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    if (!email || !emailRegex.test(email.trim())) {
+      setError("Please enter a valid email address.")
+      return
+    }
+
     if (password !== confirmPassword) {
       setError("Passwords do not match.")
       return
@@ -118,7 +123,7 @@ export function SignupForm3({
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
-                  type="email"
+                  type="text"
                   placeholder="m@example.com"
                   value={email}
                   onChange={e => setEmail(e.target.value)}

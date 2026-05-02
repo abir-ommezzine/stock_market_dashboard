@@ -1,4 +1,4 @@
-package com.stockproject.experiment_service.auth.dto;
+package com.stockproject.experiment_service.admin.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -8,7 +8,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class RegisterRequest {
+public class CreateAdminRequest {
     @NotBlank(message = "First name is required")
     private String firstName;
     
