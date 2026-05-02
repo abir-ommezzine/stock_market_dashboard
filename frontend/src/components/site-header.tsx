@@ -55,7 +55,7 @@ export function SiteHeader() {
                 variant="ghost"
                 size="sm"
                 className="hidden sm:flex dark:text-foreground"
-                onClick={() => navigate('/dashboard-2')}
+                onClick={() => navigate('/dashboard')}
               >
                 Dashboard
               </Button>

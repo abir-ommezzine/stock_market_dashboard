@@ -1,8 +1,13 @@
 package com.stockproject.experiment_service.auth.controller;
 
 import com.stockproject.experiment_service.auth.dto.AuthResponse;
+import com.stockproject.experiment_service.auth.dto.ChangePasswordRequest;
+import com.stockproject.experiment_service.auth.dto.ForgotPasswordRequest;
 import com.stockproject.experiment_service.auth.dto.LoginRequest;
 import com.stockproject.experiment_service.auth.dto.RegisterRequest;
+import com.stockproject.experiment_service.auth.dto.ResetPasswordRequest;
+import com.stockproject.experiment_service.auth.dto.UpdateProfileRequest;
+import com.stockproject.experiment_service.auth.model.User;
 import com.stockproject.experiment_service.auth.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -42,6 +47,75 @@ public class AuthController {
             return ResponseEntity.ok(response);
         } catch (UsernameNotFoundException | BadCredentialsException e) {
             return ResponseEntity.status(401).body(Map.of("error", "Invalid email or password"));
+        }
+    }
+
+    @PostMapping("/change-password/{userId}")
+    public ResponseEntity<?> changePassword(
+            @PathVariable Long userId,
+            @Valid @RequestBody ChangePasswordRequest request) {
+        try {
+            authService.changePassword(userId, request.getCurrentPassword(), request.getNewPassword());
+            return ResponseEntity.ok(Map.of("message", "Password changed successfully"));
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.status(404).body(Map.of("error", "User not found"));
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(400).body(Map.of("error", "Current password is incorrect"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to change password"));
+        }
+    }
+
+    @PutMapping("/update-profile/{userId}")
+    public ResponseEntity<?> updateProfile(
+            @PathVariable Long userId,
+            @Valid @RequestBody UpdateProfileRequest request) {
+        try {
+            User updatedUser = authService.updateProfile(
+                userId, 
+                request.getFirstName(), 
+                request.getLastName(), 
+                request.getEmail()
+            );
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", updatedUser.getId());
+            response.put("firstName", updatedUser.getFirstName());
+            response.put("lastName", updatedUser.getLastName());
+            response.put("email", updatedUser.getEmail());
+            response.put("role", updatedUser.getRole().name());
+            
+            return ResponseEntity.ok(response);
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.status(404).body(Map.of("error", "User not found"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to update profile"));
+        }
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        try {
+            authService.forgotPassword(request.getEmail());
+            return ResponseEntity.ok(Map.of("message", "Password reset email sent successfully"));
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.ok(Map.of("message", "If the email exists, a reset link has been sent"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to send password reset email"));
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        try {
+            authService.resetPassword(request.getToken(), request.getNewPassword());
+            return ResponseEntity.ok(Map.of("message", "Password reset successfully"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to reset password"));
         }
     }
 

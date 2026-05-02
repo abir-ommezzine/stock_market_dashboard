@@ -31,6 +31,9 @@ public class Dataset {
     @Column(nullable = false)
     private SourceType sourceType;
 
+    @Column(nullable = false)
+    private boolean temporary = true;
+
     private LocalDateTime createdAt;
 
     public Dataset() {}
@@ -74,6 +77,9 @@ public class Dataset {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public boolean isTemporary() { return temporary; }
+    public void setTemporary(boolean temporary) { this.temporary = temporary; }
 
     @PrePersist
     protected void onCreate() {
