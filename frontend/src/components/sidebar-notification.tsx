@@ -30,24 +30,24 @@ export function SidebarNotification() {
             <div>
               Welcome to{" "}
               <a 
-                href="https://shadcnstore.com" 
+                href="https://stockai.com" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-primary hover:underline"
               >
-                ShadcnStore
+                StockAI
               </a>
             </div>
           </h3>
           <p className="text-sm text-muted-foreground dark:text-neutral-400 leading-relaxed">
-            Explore our premium Shadcn UI{" "}
+            Explore our premium stock prediction features and AI-powered analytics.{" "}
             <a 
-              href="https://shadcnstore.com/blocks" 
+              href="https://stockai.com/features" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-primary underline"
             >
-              blocks
+              Learn more
             </a>{" "}
             to build your next project faster.
           </p>

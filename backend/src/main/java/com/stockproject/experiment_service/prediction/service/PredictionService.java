@@ -4,6 +4,8 @@ import com.stockproject.experiment_service.prediction.dto.PredictionResponse;
 import com.stockproject.experiment_service.prediction.dto.SavePredictionRequest;
 import com.stockproject.experiment_service.prediction.model.Prediction;
 import com.stockproject.experiment_service.prediction.repository.PredictionRepository;
+import com.stockproject.experiment_service.repository.DatasetRepository;
+import com.stockproject.experiment_service.model.Dataset;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,12 +15,20 @@ import java.util.stream.Collectors;
 public class PredictionService {
 
     private final PredictionRepository predictionRepository;
+    private final DatasetRepository datasetRepository;
 
-    public PredictionService(PredictionRepository predictionRepository) {
+    public PredictionService(PredictionRepository predictionRepository, DatasetRepository datasetRepository) {
         this.predictionRepository = predictionRepository;
+        this.datasetRepository = datasetRepository;
     }
 
     public PredictionResponse save(SavePredictionRequest req) {
+        Dataset dataset = datasetRepository.findById(req.getDatasetId()).orElse(null);
+        if (dataset != null && dataset.isTemporary()) {
+            dataset.setTemporary(false);
+            datasetRepository.save(dataset);
+        }
+
         Prediction prediction = Prediction.builder()
                 .userId(req.getUserId())
                 .company(req.getCompany())

@@ -13,6 +13,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
     boolean existsByEmail(String email);
     long countByCreatedAtAfter(LocalDateTime date);
+    Optional<User> findByResetToken(String resetToken);
 
     @Query("SELECT u FROM User u WHERE " +
            "LOWER(u.email) LIKE %:q% OR " +

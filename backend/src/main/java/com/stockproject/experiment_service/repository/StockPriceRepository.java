@@ -9,4 +9,6 @@ public interface StockPriceRepository
         extends JpaRepository<StockPrice,Long> {
 
     List<StockPrice> findByDatasetId(Long datasetId);
+    
+    void deleteByDatasetId(Long datasetId);
 }
