@@ -1,0 +1,79 @@
+@startuml Launch a Prediction - Black Box Sequence Diagram
+
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam sequenceActorBorderColor #2C3E50
+skinparam sequenceActorBackgroundColor #D5E8D4
+skinparam sequenceParticipantBorderColor #4A90D9
+skinparam sequenceParticipantBackgroundColor #1A1A2E
+skinparam sequenceParticipantFontColor #FFFFFF
+skinparam sequenceArrowColor #2C3E50
+skinparam noteBorderColor #F0A500
+skinparam noteBackgroundColor #FFF8E1
+skinparam sequenceGroupBorderColor #555555
+skinparam sequenceGroupBackgroundColor #F5F5F5
+skinparam sequenceLifeLineBorderColor #4A90D9
+
+actor "User" as User
+
+box "System" #1A1A2E
+    participant "Stock Market\nPrediction Dashboard" as System #2C3E50
+end box
+
+' ═══════════════════════════════════════════════════
+' 1 — SELECT MODEL
+' ═══════════════════════════════════════════════════
+User -> System : Select prediction model\n(ARIMA / ARMA / SARIMA)
+System --> User : Model selection confirmed\nParameter form displayed
+
+' ═══════════════════════════════════════════════════
+' 2 — CONFIGURE PARAMETERS
+' ═══════════════════════════════════════════════════
+User -> System : Configure parameters\n(Auto or Custom: p, d, q, steps)
+System --> User : Configuration ready
+
+' ═══════════════════════════════════════════════════
+' 3 — RUN PREDICTION
+' ═══════════════════════════════════════════════════
+User -> System : Click "Run Prediction"
+
+activate System
+note right of System
+    System internally:
+    • Fetches stock price data
+    • Trains the selected model
+    • Generates forecast
+    • Computes metrics
+end note
+
+System --> User : Prediction chart displayed\n(historical + forecast overlay)
+System --> User : Metrics displayed\n(RMSE, MAE, MAPE, AIC, BIC)
+System --> User : Optimal parameters shown\n(if Auto mode was used)
+deactivate System
+
+' ═══════════════════════════════════════════════════
+' 4 — SAVE EXPERIMENT (authenticated)
+' ═══════════════════════════════════════════════════
+alt User is logged in
+    User -> System : Click "Save"
+    System --> User : "Prediction saved successfully" ✓
+
+else User is not logged in
+    User -> System : Click "Save"
+    System --> User : Redirect to Login page
+    User -> System : Submit credentials
+    System --> User : Redirected back to prediction screen
+    System --> User : "Prediction saved successfully" ✓
+end
+
+' ═══════════════════════════════════════════════════
+' 5 — ERROR CASE
+' ═══════════════════════════════════════════════════
+group #FFEBEE "Alt — Prediction Fails"
+    User -> System : Click "Run Prediction"
+    activate System
+    System --> User : Error message displayed
+    deactivate System
+end
+
+@enduml

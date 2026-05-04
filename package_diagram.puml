@@ -1,0 +1,48 @@
+@startuml Package Diagram
+
+skinparam packageBackgroundColor #EAF4FB
+skinparam packageBorderColor #4A90D9
+skinparam packageFontStyle bold
+skinparam arrowColor #2C3E50
+skinparam arrowThickness 2
+skinparam roundcorner 8
+
+package "Frontend\n(React + TypeScript)" #EAF4FB {
+    package "pages"
+    package "components"
+    package "api client"
+    package "contexts"
+}
+
+package "Backend\n(Spring Boot)" #F3E5F5 {
+    package "controller"
+    package "service"
+    package "provider"
+    package "repository"
+    package "auth"
+}
+
+package "ML Service\n(FastAPI + Python)" #FFF8E1 {
+    package "routes"
+    package "prediction pipeline"
+    package "models"
+}
+
+package "Database\n(PostgreSQL)" #FFFDE7 {
+    package "users"
+    package "datasets"
+    package "stock_prices"
+    package "saved_predictions"
+}
+
+"api client"           ..> "controller"          : HTTP REST
+"api client"           ..> "auth"                : HTTP REST
+"service"              ..> "routes"              : HTTP POST /train
+"repository"           ..> "Database\n(PostgreSQL)" : JDBC / JPA
+"controller"           ..> "service"             : uses
+"service"              ..> "repository"          : uses
+"controller"           ..> "provider"            : uses
+"routes"               ..> "prediction pipeline" : delegates
+"prediction pipeline"  ..> "models"              : trains
+
+@enduml

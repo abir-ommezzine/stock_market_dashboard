@@ -1,0 +1,38 @@
+@startuml Deployment Diagram
+
+left to right direction
+
+skinparam nodeBackgroundColor #EAF4FB
+skinparam nodeBorderColor #4A90D9
+skinparam nodeFontStyle bold
+skinparam databaseBackgroundColor #FFF8E1
+skinparam databaseBorderColor #F0A500
+skinparam arrowColor #2C3E50
+skinparam arrowThickness 2
+skinparam roundcorner 8
+
+actor "User" as User
+
+node "Client" <<device>> #D5E8D4 {
+    node "Web Browser" as Browser
+}
+
+node "Docker Host" <<server>> #F3E5F5 {
+    node "React Frontend\n" <<container>> as Frontend
+    node "Spring Boot Backend\n" <<container>> as Backend
+    node "FastAPI ML Service\n" <<container>> as ML
+    database "PostgreSQL\n" <<container>> as DB
+}
+
+node "External APIs" <<cloud>> #FFFDE7 {
+    node "Yahoo Finance\nAlpha Vantage" as ExtAPI
+}
+
+User      --> Browser   : uses
+Browser   --> Frontend  : HTTP
+Frontend  --> Backend   : HTTP REST + JWT
+Backend   --> ML        : HTTP (internal)
+Backend   --> DB        : JDBC (internal)
+Backend   --> ExtAPI    : HTTPS
+
+@enduml

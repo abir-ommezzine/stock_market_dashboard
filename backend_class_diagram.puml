@@ -1,0 +1,148 @@
+@startuml Backend Class Diagram
+
+skinparam classBackgroundColor #EAF4FB
+skinparam classBorderColor #4A90D9
+skinparam classArrowColor #2C3E50
+skinparam classArrowThickness 2
+skinparam roundcorner 8
+skinparam linetype ortho
+
+' ── ENUMS ──
+enum SourceType {
+  FILE
+  URL
+  YAHOO
+  ALPHAVANTAGE
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+' ── ENTITIES ──
+class User {
+  id
+  email
+  password
+  firstName
+  lastName
+  role
+  createdAt
+}
+
+class Dataset {
+  id
+  fileName
+  filePath
+  apiUrl
+  sourceType
+  createdAt
+}
+
+class StockPrice {
+  id
+  symbol
+  date
+  open
+  high
+  low
+  close
+  volume
+}
+
+' ── CONTROLLERS ──
+class AuthController {
+  register()
+  login()
+}
+
+class DatasetController {
+  uploadDataset()
+  linkSource()
+  getSymbols()
+}
+
+class MlController {
+  trainFromDataset()
+}
+
+' ── SERVICES ──
+class AuthService {
+  register()
+  login()
+}
+
+class DatasetService {
+  uploadDataset()
+  registerApiDataset()
+  getUserDatasets()
+}
+
+class MlClientService {
+  trainModel()
+  computeMetrics()
+}
+
+class FileStorageService {
+  storeFile()
+}
+
+' ── PROVIDERS (Strategy) ──
+interface DataSourceProvider {
+  +getType()
+  +load()
+}
+
+class CsvProvider
+class UrlDatasetProvider
+class YahooProvider
+class AlphaVantageProvider
+
+class ProviderFactory {
+  get(type)
+}
+
+' ── AUTH ──
+class JwtUtil {
+  generateToken()
+  extractEmail()
+  isTokenValid()
+}
+
+class JwtAuthFilter {
+  doFilterInternal()
+}
+
+' ── RELATIONSHIPS ──
+
+' Enums
+User    --> Role
+Dataset --> SourceType
+
+' Entity relationships
+User    "1" --> "0..*" Dataset    : owns
+Dataset "1" --> "0..*" StockPrice : contains
+
+' Strategy pattern
+DataSourceProvider <|.. CsvProvider
+DataSourceProvider <|.. UrlDatasetProvider
+DataSourceProvider <|.. YahooProvider
+DataSourceProvider <|.. AlphaVantageProvider
+ProviderFactory "1" --> "1..*" DataSourceProvider : manages
+
+' Controllers → Services
+AuthController    "1" --> "1" AuthService
+DatasetController "1" --> "1" DatasetService
+MlController      "1" --> "1" MlClientService
+
+' Services → dependencies
+AuthService     "1" --> "1" JwtUtil
+DatasetService  "1" --> "1" FileStorageService
+DatasetService  "1" --> "1" ProviderFactory
+MlClientService "1" --> "1" ProviderFactory
+
+' Security
+JwtAuthFilter "1" --> "1" JwtUtil
+
+@enduml

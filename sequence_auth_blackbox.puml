@@ -1,0 +1,90 @@
+@startuml Authentication - Black Box Sequence Diagram
+
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam sequenceActorBorderColor #2C3E50
+skinparam sequenceActorBackgroundColor #D5E8D4
+skinparam sequenceParticipantBorderColor #4A90D9
+skinparam sequenceParticipantBackgroundColor #1A1A2E
+skinparam sequenceParticipantFontColor #FFFFFF
+skinparam sequenceArrowColor #2C3E50
+skinparam noteBorderColor #F0A500
+skinparam noteBackgroundColor #FFF8E1
+
+actor "User" as User
+
+box "System" #1A1A2E
+    participant "Stock Market\nPrediction Dashboard" as System #2C3E50
+end box
+
+' ═══════════════════════════════════════════
+' REGISTER
+' ═══════════════════════════════════════════
+group #E8F4FD "Register"
+    User  -> System : Fill registration form\n(firstName, lastName, email, password)
+    User  -> System : Submit
+
+    activate System
+
+    alt Email already in use
+        System --> User : Error — "Email already in use"
+
+    else Registration successful
+        System --> User : Account created\nWelcome email sent
+        System --> User : Redirected to Dashboard
+    end
+
+    deactivate System
+end
+
+' ═══════════════════════════════════════════
+' LOGIN
+' ═══════════════════════════════════════════
+group #EAF7EA "Login"
+    User  -> System : Enter email & password
+    User  -> System : Submit
+
+    activate System
+
+    alt Invalid credentials
+        System --> User : Error — "Invalid email or password"
+
+    else Login successful
+        System --> User : Access granted\nJWT token issued
+        System --> User : Redirected to Dashboard
+    end
+
+    deactivate System
+end
+
+' ═══════════════════════════════════════════
+' PROTECTED ACTION (e.g. Save Prediction)
+' ═══════════════════════════════════════════
+group #FFF3E0 "Access Protected Feature"
+    User -> System : Perform action requiring authentication\n(e.g. Save Prediction)
+
+    activate System
+
+    alt Not authenticated
+        System --> User : Redirected to Login page
+        User   -> System : Login successfully
+        System --> User : Redirected back to original page
+        System --> User : Action completed
+    else Already authenticated
+        System --> User : Action completed
+    end
+
+    deactivate System
+end
+
+' ═══════════════════════════════════════════
+' LOGOUT
+' ═══════════════════════════════════════════
+group #FCE4EC "Logout"
+    User  -> System : Click "Sign out"
+    activate System
+    System --> User : Session cleared\nRedirected to Login page
+    deactivate System
+end
+
+@enduml
