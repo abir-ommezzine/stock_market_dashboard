@@ -50,7 +50,6 @@ export async function getAllPredictions(): Promise<PredictionSummary[]> {
   if (!res.ok) throw new Error("Failed to fetch predictions")
   const predictions: any[] = await res.json()
   
-  // Fetch all users to map userId to user details
   const usersRes = await apiFetch("/api/admin/users")
   const users: UserSummary[] = usersRes.ok ? await usersRes.json() : []
   
@@ -68,4 +67,24 @@ export async function getAllPredictions(): Promise<PredictionSummary[]> {
       createdAt: p.createdAt,
     }
   })
+}
+
+export interface CreateAdminRequest {
+  firstName: string
+  lastName: string
+  email: string
+  password: string
+}
+
+export async function createAdmin(data: CreateAdminRequest): Promise<UserSummary> {
+  const res = await apiFetch("/api/admin/users/create-admin", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) {
+    const error = await res.json()
+    throw new Error(error.error || "Failed to create admin")
+  }
+  return res.json()
 }

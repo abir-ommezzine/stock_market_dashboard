@@ -14,9 +14,9 @@ type FaqItem = {
 const faqItems: FaqItem[] = [
   {
     value: 'item-1',
-    question: 'How do I integrate ShadcnStore components into my project?',
+    question: 'How do I use StockAI prediction features?',
     answer:
-      'Integration is simple! All our components are built with shadcn/ui and work with React, Next.js, and Vite. Just copy the component code, install any required dependencies, and paste it into your project. Each component comes with detailed installation instructions and examples.',
+      'Using StockAI is simple! Upload your stock data or connect to our API, select your prediction model (ARIMA, SARIMA, or ARMA), and let our AI analyze the data. Each prediction comes with detailed metrics and visualizations to help you make informed decisions.',
   },
   {
     value: 'item-2',
@@ -34,13 +34,13 @@ const faqItems: FaqItem[] = [
     value: 'item-4',
     question: 'Do you provide support and updates?',
     answer:
-      'Absolutely! We provide community support for free components through our Discord server and GitHub issues. Premium subscribers get priority email support, regular component updates, and early access to new releases. We also maintain compatibility with the latest shadcn/ui versions.',
+      'Absolutely! We provide comprehensive support through our documentation and email support. We regularly update our prediction models with the latest market data and continuously improve our algorithms. Premium users get priority support and early access to new features.',
   },
   {
     value: 'item-5',
-    question: 'What frameworks and tools do you support?',
+    question: 'What technologies power StockAI?',
     answer:
-      'Our components work with React 18+, Next.js 13+, and Vite. We use TypeScript, Tailwind CSS, and follow shadcn/ui conventions. Components are tested with popular tools like React Hook Form, TanStack Query, and Zustand for state management.',
+      'StockAI is built with React, TypeScript, and Tailwind CSS for the frontend. Our prediction engine uses Python with advanced time series models (ARIMA, SARIMA, ARMA) and machine learning algorithms. We use PostgreSQL for data storage and FastAPI for our backend services.',
   },
   {
     value: 'item-6',
@@ -61,7 +61,7 @@ const FaqSection = () => {
             Frequently Asked Questions
           </h2>
           <p className="text-lg text-muted-foreground">
-            Everything you need to know about ShadcnStore components, licensing, and integration. Still have questions? We're here to help!
+            Everything you need to know about StockAI predictions, features, and integration. Still have questions? We're here to help!
           </p>
         </div>
 

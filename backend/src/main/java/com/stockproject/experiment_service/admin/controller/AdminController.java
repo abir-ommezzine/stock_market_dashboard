@@ -1,11 +1,15 @@
 package com.stockproject.experiment_service.admin.controller;
 
 import com.stockproject.experiment_service.admin.dto.AdminStatsResponse;
+import com.stockproject.experiment_service.admin.dto.CreateAdminRequest;
 import com.stockproject.experiment_service.admin.dto.UserSummary;
+import com.stockproject.experiment_service.auth.model.Role;
 import com.stockproject.experiment_service.auth.model.User;
 import com.stockproject.experiment_service.auth.repository.UserRepository;
 import com.stockproject.experiment_service.prediction.repository.PredictionRepository;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -19,11 +23,14 @@ public class AdminController {
 
     private final UserRepository userRepository;
     private final PredictionRepository predictionRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public AdminController(UserRepository userRepository,
-                           PredictionRepository predictionRepository) {
+                           PredictionRepository predictionRepository,
+                           PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.predictionRepository = predictionRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @GetMapping("/stats")
@@ -65,5 +72,29 @@ public class AdminController {
                         predictionRepository.countByUserId(u.getId())))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(summaries);
+    }
+
+    @PostMapping("/users/create-admin")
+    public ResponseEntity<?> createAdmin(@Valid @RequestBody CreateAdminRequest request) {
+        try {
+            if (userRepository.existsByEmail(request.getEmail())) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Email already in use"));
+            }
+
+            User admin = User.builder()
+                    .firstName(request.getFirstName())
+                    .lastName(request.getLastName())
+                    .email(request.getEmail())
+                    .password(passwordEncoder.encode(request.getPassword()))
+                    .role(Role.ADMIN)
+                    .build();
+
+            userRepository.save(admin);
+
+            UserSummary summary = new UserSummary(admin, 0L);
+            return ResponseEntity.ok(summary);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 }

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/contexts/auth.context"
-import { getAdminStats, getAllUsers, searchUsers, getAllPredictions, type AdminStats, type UserSummary, type PredictionSummary } from "@/lib/api/admin.api"
+import { getAdminStats, getAllUsers, searchUsers, getAllPredictions, createAdmin, type AdminStats, type UserSummary, type PredictionSummary } from "@/lib/api/admin.api"
 import { watchlistApi, type WatchlistItem } from "@/lib/api/watchlist.api"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -41,6 +41,9 @@ export default function AdminPage() {
   const [addDialogOpen, setAddDialogOpen] = useState(false)
   const [newSymbol, setNewSymbol] = useState("")
   const [addingSymbol, setAddingSymbol] = useState(false)
+  const [createAdminDialogOpen, setCreateAdminDialogOpen] = useState(false)
+  const [adminForm, setAdminForm] = useState({ firstName: "", lastName: "", email: "", password: "" })
+  const [creatingAdmin, setCreatingAdmin] = useState(false)
 
   useEffect(() => {
     Promise.all([getAdminStats(), getAllUsers(), getAllPredictions()])
@@ -125,6 +128,39 @@ export default function AdminPage() {
     } catch (error) {
       console.error('Failed to refresh predictions:', error)
       toast.error('Failed to refresh predictions')
+    }
+  }
+
+  const handleCreateAdmin = async () => {
+    if (!adminForm.firstName || !adminForm.lastName || !adminForm.email || !adminForm.password) {
+      toast.error('All fields are required')
+      return
+    }
+
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    if (!emailRegex.test(adminForm.email.trim())) {
+      toast.error('Please enter a valid email address')
+      return
+    }
+
+    if (adminForm.password.length < 6) {
+      toast.error('Password must be at least 6 characters')
+      return
+    }
+
+    setCreatingAdmin(true)
+    try {
+      const newAdmin = await createAdmin(adminForm)
+      setUsers(prev => [newAdmin, ...prev])
+      const updatedStats = await getAdminStats()
+      setStats(updatedStats)
+      toast.success(`Admin account created for ${adminForm.email}`)
+      setAdminForm({ firstName: "", lastName: "", email: "", password: "" })
+      setCreateAdminDialogOpen(false)
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to create admin account')
+    } finally {
+      setCreatingAdmin(false)
     }
   }
 
@@ -218,18 +254,102 @@ export default function AdminPage() {
           </div>
         ) : tab === "users" ? (
           // ── Users Tab ──
-          <div className="space-y-4">
-            <div className="relative max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name or email..."
-                className="pl-9"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-              />
+          <div className="space-y-6">
+            {/* User Stats Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Users</p>
+                      <p className="text-3xl font-bold mt-1">{stats?.totalUsers ?? 0}</p>
+                      <p className="text-xs text-muted-foreground mt-1">All registered users</p>
+                    </div>
+                    <div className="rounded-full bg-blue-100 dark:bg-blue-900/20 p-3">
+                      <Users className="size-6 text-blue-600 dark:text-blue-400" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">New This Month</p>
+                      <p className="text-3xl font-bold mt-1">{stats?.newUsersThisMonth ?? 0}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Recent signups</p>
+                    </div>
+                    <div className="rounded-full bg-green-100 dark:bg-green-900/20 p-3">
+                      <UserPlus className="size-6 text-green-600 dark:text-green-400" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Active Users</p>
+                      <p className="text-3xl font-bold mt-1">
+                        {users.filter(u => u.predictionCount > 0).length}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">Made predictions</p>
+                    </div>
+                    <div className="rounded-full bg-purple-100 dark:bg-purple-900/20 p-3">
+                      <Activity className="size-6 text-purple-600 dark:text-purple-400" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Admin Users</p>
+                      <p className="text-3xl font-bold mt-1">
+                        {users.filter(u => u.role === "ADMIN").length}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">Administrator accounts</p>
+                    </div>
+                    <div className="rounded-full bg-red-100 dark:bg-red-900/20 p-3">
+                      <Badge className="size-6 text-red-600 dark:text-red-400" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
+            {/* Search Bar and Create Admin Button */}
+            <div className="flex items-center justify-between gap-4">
+              <div className="relative max-w-sm flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name or email..."
+                  className="pl-9"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                />
+              </div>
+              <Button 
+                onClick={() => setCreateAdminDialogOpen(true)} 
+                className="flex items-center gap-2"
+              >
+                <UserPlus className="h-4 w-4" />
+                Create Admin
+              </Button>
+            </div>
+
+            {/* Users Table */}
             <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  All Users ({users.length})
+                </CardTitle>
+              </CardHeader>
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <table className="w-full">
@@ -522,6 +642,85 @@ export default function AdminPage() {
                   </>
                 ) : (
                   'Add Stock'
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Create Admin Dialog */}
+        <Dialog open={createAdminDialogOpen} onOpenChange={setCreateAdminDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create Admin Account</DialogTitle>
+              <DialogDescription>
+                Create a new administrator account with full access to the admin dashboard.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">First Name</label>
+                  <Input
+                    placeholder="John"
+                    value={adminForm.firstName}
+                    onChange={(e) => setAdminForm(prev => ({ ...prev, firstName: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Last Name</label>
+                  <Input
+                    placeholder="Doe"
+                    value={adminForm.lastName}
+                    onChange={(e) => setAdminForm(prev => ({ ...prev, lastName: e.target.value }))}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Email</label>
+                <Input
+                  type="text"
+                  placeholder="admin@stockai.com"
+                  value={adminForm.email}
+                  onChange={(e) => setAdminForm(prev => ({ ...prev, email: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Password</label>
+                <Input
+                  type="password"
+                  placeholder="Minimum 6 characters"
+                  value={adminForm.password}
+                  onChange={(e) => setAdminForm(prev => ({ ...prev, password: e.target.value }))}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleCreateAdmin()
+                    }
+                  }}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setCreateAdminDialogOpen(false)
+                  setAdminForm({ firstName: "", lastName: "", email: "", password: "" })
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleCreateAdmin} 
+                disabled={creatingAdmin}
+              >
+                {creatingAdmin ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  'Create Admin'
                 )}
               </Button>
             </DialogFooter>

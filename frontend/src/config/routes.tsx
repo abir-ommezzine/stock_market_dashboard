@@ -8,8 +8,7 @@ const Watchlist = lazy(() => import('@/app/watchlist/page'))
 const Admin = lazy(() => import('@/app/admin/page'))
 // Lazy load components for better performance
 const Landing = lazy(() => import('@/app/landing/page'))
-const Dashboard = lazy(() => import('@/app/dashboard/page'))
-const Dashboard2 = lazy(() => import('@/app/dashboard-2/page'))
+const Dashboard = lazy(() => import('@/app/dashboard-2/page'))
 const Mail = lazy(() => import('@/app/mail/page'))
 const Tasks = lazy(() => import('@/app/tasks/page'))
 const Chat = lazy(() => import('@/app/chat/page'))
@@ -28,6 +27,7 @@ const SignUp3 = lazy(() => import('@/app/auth/sign-up-3/page'))
 const ForgotPassword = lazy(() => import('@/app/auth/forgot-password/page'))
 const ForgotPassword2 = lazy(() => import('@/app/auth/forgot-password-2/page'))
 const ForgotPassword3 = lazy(() => import('@/app/auth/forgot-password-3/page'))
+const ResetPassword = lazy(() => import('@/app/auth/reset-password/page'))
 
 // Error pages
 const Unauthorized = lazy(() => import('@/app/errors/unauthorized/page'))
@@ -68,10 +68,6 @@ export const routes: RouteConfig[] = [
   {
     path: "/dashboard",
     element: <Dashboard />
-  },
-  {
-    path: "/dashboard-2",
-    element: <Dashboard2 />
   },
 
   // Application Routes
@@ -142,6 +138,10 @@ export const routes: RouteConfig[] = [
   {
     path: "/auth/forgot-password-3",
     element: <ForgotPassword3 />
+  },
+  {
+    path: "/auth/reset-password",
+    element: <ResetPassword />
   },
 
   // Error Pages

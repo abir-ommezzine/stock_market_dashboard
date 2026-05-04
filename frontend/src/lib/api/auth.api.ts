@@ -60,7 +60,45 @@ export async function register(credentials: RegisterCredentials): Promise<AuthUs
   return res.json()
 }
 
-export async function forgotPassword(_email: string): Promise<void> {
-  // Not yet implemented on backend
-  console.log("Forgot password not yet implemented")
+export async function forgotPassword(email: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/forgot-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  })
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || "Failed to send reset email")
+  }
+}
+
+export async function resetPassword(token: string, newPassword: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/reset-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, newPassword }),
+  })
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || "Failed to reset password")
+  }
+}
+
+export async function changePassword(userId: number, currentPassword: string, newPassword: string): Promise<void> {
+  const token = localStorage.getItem("auth_token")
+  const res = await fetch(`${API_BASE}/change-password/${userId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({ currentPassword, newPassword }),
+  })
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || "Failed to change password")
+  }
 }
