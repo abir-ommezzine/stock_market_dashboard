@@ -30,19 +30,19 @@ export function SidebarNotification() {
             <div>
               Welcome to{" "}
               <a 
-                href="https://stockai.com" 
+                href="https://stocky.com" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-primary hover:underline"
               >
-                StockAI
+                Stocky
               </a>
             </div>
           </h3>
           <p className="text-sm text-muted-foreground dark:text-neutral-400 leading-relaxed">
             Explore our premium stock prediction features and AI-powered analytics.{" "}
             <a 
-              href="https://stockai.com/features" 
+              href="https://stocky.com/features" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-primary underline"

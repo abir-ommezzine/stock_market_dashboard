@@ -28,6 +28,7 @@ const ForgotPassword = lazy(() => import('@/app/auth/forgot-password/page'))
 const ForgotPassword2 = lazy(() => import('@/app/auth/forgot-password-2/page'))
 const ForgotPassword3 = lazy(() => import('@/app/auth/forgot-password-3/page'))
 const ResetPassword = lazy(() => import('@/app/auth/reset-password/page'))
+const VerifyEmail = lazy(() => import('@/app/auth/verify-email/page'))
 
 // Error pages
 const Unauthorized = lazy(() => import('@/app/errors/unauthorized/page'))
@@ -142,6 +143,10 @@ export const routes: RouteConfig[] = [
   {
     path: "/auth/reset-password",
     element: <ResetPassword />
+  },
+  {
+    path: "/auth/verify-email",
+    element: <VerifyEmail />
   },
 
   // Error Pages

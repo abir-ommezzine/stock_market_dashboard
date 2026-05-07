@@ -36,7 +36,7 @@ export function AboutSection() {
         {/* Section Header */}
         <div className="mx-auto max-w-4xl text-center mb-16">
           <Badge variant="outline" className="mb-4">
-            About StockAI
+            About Stocky
           </Badge>
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-6">
             Built for investors, by data scientists
@@ -71,7 +71,7 @@ export function AboutSection() {
           </div>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="cursor-pointer" asChild>
-              <a href="https://github.com/stockai" target="_blank" rel="noopener noreferrer">
+              <a href="https://github.com/stocky" target="_blank" rel="noopener noreferrer">
                 <Github className="mr-2 h-4 w-4" />
                 Star on GitHub
               </a>

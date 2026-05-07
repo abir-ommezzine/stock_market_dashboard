@@ -22,7 +22,7 @@ public class EmailService {
 
             helper.setFrom("stocky.entreprise@gmail.com");
             helper.setTo(toEmail);
-            helper.setSubject("Welcome to StockAI - Your Account is Ready!");
+            helper.setSubject("Welcome to Stocky - Your Account is Ready!");
 
             String htmlContent = buildWelcomeEmailHtml(firstName, lastName, toEmail);
             helper.setText(htmlContent, true);
@@ -40,7 +40,7 @@ public class EmailService {
 
             helper.setFrom("stocky.entreprise@gmail.com");
             helper.setTo(toEmail);
-            helper.setSubject("Reset Your StockAI Password");
+            helper.setSubject("Reset Your Stocky Password");
 
             String htmlContent = buildPasswordResetEmailHtml(firstName, toEmail, resetToken);
             helper.setText(htmlContent, true);
@@ -48,6 +48,24 @@ public class EmailService {
             mailSender.send(message);
         } catch (MessagingException e) {
             throw new RuntimeException("Failed to send password reset email", e);
+        }
+    }
+
+    public void sendVerificationEmail(String toEmail, String firstName, String verificationToken) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom("stocky.entreprise@gmail.com");
+            helper.setTo(toEmail);
+            helper.setSubject("Verify Your Stocky Email Address");
+
+            String htmlContent = buildVerificationEmailHtml(firstName, toEmail, verificationToken);
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            throw new RuntimeException("Failed to send verification email", e);
         }
     }
 
@@ -71,14 +89,14 @@ public class EmailService {
             "</head>" +
             "<body>" +
             "<div class=\"header\">" +
-            "<h1>🚀 Welcome to StockAI!</h1>" +
+            "<h1>🚀 Welcome to Stocky!</h1>" +
             "</div>" +
             "<div class=\"content\">" +
             "<h2>Hello " + firstName + " " + lastName + ",</h2>" +
-            "<p>Thank you for joining StockAI! We're excited to have you on board.</p>" +
+            "<p>Thank you for joining Stocky! We're excited to have you on board.</p>" +
             "<p>Your account has been successfully created and you can now access all our powerful stock prediction features.</p>" +
             "<div class=\"features\">" +
-            "<h3>What you can do with StockAI:</h3>" +
+            "<h3>What you can do with Stocky:</h3>" +
             "<div class=\"feature-item\">Run advanced stock predictions using ARIMA, SARIMA, and ARMA models</div>" +
             "<div class=\"feature-item\">Create and manage your personalized watchlist</div>" +
             "<div class=\"feature-item\">Save and track your prediction history</div>" +
@@ -89,11 +107,11 @@ public class EmailService {
             "<a href=\"http://localhost:5173/auth/sign-in-3\" class=\"button\">Start Predicting Now</a>" +
             "</p>" +
             "<p>If you have any questions or need assistance, feel free to reach out to our support team.</p>" +
-            "<p>Happy predicting!<br><strong>The StockAI Team</strong></p>" +
+            "<p>Happy predicting!<br><strong>The Stocky Team</strong></p>" +
             "</div>" +
             "<div class=\"footer\">" +
             "<p>This email was sent to " + toEmail + "</p>" +
-            "<p>© 2026 StockAI. All rights reserved.</p>" +
+            "<p>© 2026 Stocky. All rights reserved.</p>" +
             "</div>" +
             "</body>" +
             "</html>";
@@ -123,7 +141,7 @@ public class EmailService {
             "</div>" +
             "<div class=\"content\">" +
             "<h2>Hello " + firstName + ",</h2>" +
-            "<p>We received a request to reset your StockAI account password.</p>" +
+            "<p>We received a request to reset your Stocky account password.</p>" +
             "<p>Click the button below to reset your password:</p>" +
             "<p style=\"text-align: center;\">" +
             "<a href=\"" + resetLink + "\" class=\"button\">Reset Password</a>" +
@@ -133,11 +151,54 @@ public class EmailService {
             "</div>" +
             "<p>If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.</p>" +
             "<p>For security reasons, please do not share this email with anyone.</p>" +
-            "<p>Best regards,<br><strong>The StockAI Team</strong></p>" +
+            "<p>Best regards,<br><strong>The Stocky Team</strong></p>" +
             "</div>" +
             "<div class=\"footer\">" +
             "<p>This email was sent to " + toEmail + "</p>" +
-            "<p>© 2026 StockAI. All rights reserved.</p>" +
+            "<p>© 2026 Stocky. All rights reserved.</p>" +
+            "</div>" +
+            "</body>" +
+            "</html>";
+    }
+
+    private String buildVerificationEmailHtml(String firstName, String toEmail, String verificationToken) {
+        String verificationLink = "http://localhost:5173/auth/verify-email?token=" + verificationToken;
+        
+        return "<!DOCTYPE html>" +
+            "<html>" +
+            "<head>" +
+            "<meta charset=\"UTF-8\">" +
+            "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" +
+            "<style>" +
+            "body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }" +
+            ".header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center; }" +
+            ".header h1 { margin: 0; font-size: 28px; }" +
+            ".content { background: #ffffff; padding: 30px; border: 1px solid #e0e0e0; border-top: none; }" +
+            ".button { display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }" +
+            ".info { background: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; margin: 20px 0; border-radius: 4px; }" +
+            ".footer { text-align: center; padding: 20px; color: #666; font-size: 14px; border-top: 1px solid #e0e0e0; margin-top: 20px; }" +
+            "</style>" +
+            "</head>" +
+            "<body>" +
+            "<div class=\"header\">" +
+            "<h1>✉️ Verify Your Email</h1>" +
+            "</div>" +
+            "<div class=\"content\">" +
+            "<h2>Hello " + firstName + ",</h2>" +
+            "<p>Thank you for signing up for Stocky! We're excited to have you on board.</p>" +
+            "<p>To complete your registration and access all features, please verify your email address by clicking the button below:</p>" +
+            "<p style=\"text-align: center;\">" +
+            "<a href=\"" + verificationLink + "\" class=\"button\">Verify Email Address</a>" +
+            "</p>" +
+            "<div class=\"info\">" +
+            "<strong>ℹ️ Note:</strong> Once verified, you'll be automatically signed in and redirected to your dashboard." +
+            "</div>" +
+            "<p>If you didn't create an account with Stocky, you can safely ignore this email.</p>" +
+            "<p>Best regards,<br><strong>The Stocky Team</strong></p>" +
+            "</div>" +
+            "<div class=\"footer\">" +
+            "<p>This email was sent to " + toEmail + "</p>" +
+            "<p>© 2026 Stocky. All rights reserved.</p>" +
             "</div>" +
             "</body>" +
             "</html>";

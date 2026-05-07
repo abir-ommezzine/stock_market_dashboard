@@ -81,7 +81,7 @@ export function ResetPasswordForm({
                   <div className="bg-primary text-primary-foreground flex size-8 items-center justify-center rounded-md">
                     <Logo size={24} />
                   </div>
-                  <span className="text-xl">StockAI</span>
+                  <span className="text-xl">Stocky</span>
                 </Link>
               </div>
 
