@@ -1,0 +1,116 @@
+@startuml User Use Case Diagram
+
+left to right direction
+
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+
+skinparam usecase {
+    BorderColor #3A6EA5
+    BackgroundColor #F4F8FD
+}
+
+skinparam actor {
+    BorderColor #2C3E50
+}
+
+' ───────── ACTORS (VERTICAL ALIGNMENT) ─────────
+actor "Guest User" as Guest #27AE60
+actor "Authenticated User" as AuthUser #2980B9
+actor "Admin" as Admin #C0392B
+
+Guest -down-|> AuthUser
+AuthUser -down-|> Admin
+
+' force vertical stacking
+Guest -[hidden]-> AuthUser
+AuthUser -[hidden]-> Admin
+
+' ───────── SYSTEM ─────────
+rectangle "Stock Market Prediction Dashboard" {
+
+    package "Authentication" #E3F2FD {
+        usecase "Register Account" as UC_Register
+        usecase "Login" as UC_Login
+        usecase "Logout" as UC_Logout
+        usecase "View Dashboard" as UC_Dashboard
+    }
+
+    package "Dataset Management" #E8F5E9 {
+        usecase "Upload CSV File" as UC_UploadCSV
+        usecase "Link External CSV" as UC_LinkURL
+        usecase "Yahoo Finance API" as UC_Yahoo
+        usecase "Alpha Vantage API" as UC_Alpha
+        'usecase "View Dataset List" as UC_ViewDatasets
+        usecase "Select Stock Symbol" as UC_SelectSymbol
+    }
+
+    package "Prediction" #F3E5F5 {
+        usecase "Select Model" as UC_SelectModel
+        usecase "Configure Parameters" as UC_ConfigParams
+        usecase "Run Prediction" as UC_RunPrediction
+        usecase "Auto Optimize" as UC_AutoOptimize
+        usecase "View Results" as UC_ViewResults
+    }
+
+    package "Visualization" #FFF3E0 {
+        usecase "View Chart" as UC_ViewChart
+        usecase "View Prediction Overlay" as UC_ViewOverlay
+        usecase "View Metrics Cards" as UC_ViewMetrics
+    }
+
+    package "Experiment History" #E0F7FA {
+        usecase "Save Experiment" as UC_SaveExp
+        usecase "View History" as UC_ViewHistory
+        usecase "Search Experiments" as UC_SearchExp
+        usecase "Delete Experiment" as UC_DeleteExp
+    }
+
+    package "Administration" #FDECEA {
+        usecase "View All Users" as UC_ViewUsers
+        usecase "View All Predictions" as UC_ViewAllPred
+        usecase "System Statistics" as UC_Stats
+    }
+}
+
+' ───────── RELATIONS ─────────
+
+' Guest
+Guest -[#27AE60]-> UC_Register
+Guest -[#27AE60]-> UC_Login
+'Guest -[#27AE60]-> UC_ViewDatasets
+Guest -[#27AE60]-> UC_ViewChart
+Guest -[#27AE60]-> UC_RunPrediction
+'Guest -[#27AE60]-> UC_ViewResults
+Guest -[#27AE60]-> UC_UploadCSV
+Guest -[#27AE60]-> UC_LinkURL
+Guest -[#27AE60]-> UC_Yahoo
+Guest -[#27AE60]-> UC_Alpha
+Guest -[#27AE60]-> UC_SelectSymbol
+'Guest -[#27AE60]-> UC_SelectModel
+' Authenticated User
+AuthUser -[#2980B9]-> UC_SearchExp
+AuthUser -[#2980B9]-> UC_Logout
+AuthUser -[#2980B9]-> UC_SaveExp
+AuthUser -[#2980B9]-> UC_ViewHistory
+AuthUser -[#2980B9]-> UC_DeleteExp
+
+' Admin (now visually below)
+Admin -[#C0392B]-> UC_ViewUsers
+Admin -[#C0392B]-> UC_ViewAllPred
+Admin -[#C0392B]-> UC_Stats
+
+' ───────── LOGIC ─────────
+UC_SaveExp ..> UC_Login : <<include>>
+UC_RunPrediction ..> UC_ViewChart : <<include>>
+UC_RunPrediction ..> UC_ViewResults : <<extend>>
+UC_RunPrediction ..> UC_ViewMetrics : <<extend>>
+UC_SelectModel ..> UC_AutoOptimize : <<extend>>
+UC_RunPrediction ..> UC_SelectModel : <<include>>
+UC_SelectModel ..> UC_ConfigParams : <<extend>>
+UC_ViewChart ..> UC_SelectSymbol : <<include>>
+UC_ViewChart ..> UC_ViewOverlay : <<extend>>
+
+@enduml

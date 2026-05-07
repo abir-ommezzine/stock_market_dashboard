@@ -1,0 +1,79 @@
+@startuml Service Layer Class Diagram
+
+skinparam classBackgroundColor #EAF4FB
+skinparam classBorderColor #4A90D9
+skinparam classArrowColor #2C3E50
+skinparam classArrowThickness 2
+skinparam roundcorner 8
+skinparam linetype ortho
+hide empty members
+
+' ── AUTH ──
+class AuthService {
+  + register(request) : AuthResponse
+  + login(request) : AuthResponse
+  + changePassword(userId, current, new) : void
+  + updateProfile(userId, ...) : User
+  + forgotPassword(email) : void
+  + resetPassword(token, newPassword) : void
+}
+
+class JwtUtil {
+  + generateToken(email) : String
+  + extractEmail(token) : String
+  + isTokenValid(token) : boolean
+}
+
+' ── DATASET ──
+class DatasetService {
+  + uploadDataset(file, userId) : Dataset
+  + registerApiDataset(type, name, userId) : Dataset
+  + loadFromSource(type, params) : Dataset
+  + getUserDatasets(userId) : List<Dataset>
+  + extractSymbolsFromDataset(dataset) : List<String>
+}
+
+class FileStorageService {
+  + storeFile(file, userId) : String
+}
+
+class DatasetCleanupService {
+  + cleanupTemporaryDatasets() : void
+}
+
+' ── ML ──
+class MlClientService {
+  + trainModel(payload) : Object
+  + computeMetrics(payload) : Object
+}
+
+' ── PREDICTION ──
+class PredictionService {
+  + save(request) : PredictionResponse
+  + getAll() : List<PredictionResponse>
+  + getByUser(userId) : List<PredictionResponse>
+  + delete(id) : void
+}
+
+' ── WATCHLIST ──
+class WatchlistService {
+  + addToWatchlist(request) : WatchlistResponse
+  + getUserWatchlist(userId) : List<WatchlistResponse>
+  + removeFromWatchlist(userId, symbol) : void
+  + isInWatchlist(userId, symbol) : boolean
+}
+
+' ── EMAIL ──
+class EmailService {
+  + sendWelcomeEmail(email, firstName, lastName) : void
+  + sendPasswordResetEmail(email, firstName, token) : void
+}
+
+' ── DEPENDENCIES ──
+AuthService     --> JwtUtil       : uses
+AuthService     --> EmailService  : uses
+
+DatasetService  --> FileStorageService    : uses
+DatasetService  --> DatasetCleanupService : triggers
+
+@enduml

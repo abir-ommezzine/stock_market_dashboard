@@ -1,0 +1,90 @@
+@startuml Entity Class Diagram
+
+left to right direction
+
+' ── SPACING CONTROLS ──
+' ranksep increases space between different levels (left to right)
+skinparam ranksep 100 
+' nodesep increases space between items on the same level (top to bottom)
+skinparam nodesep 80
+
+skinparam classBackgroundColor #EAF4FB
+skinparam classBorderColor #4A90D9
+skinparam classArrowColor #2C3E50
+skinparam classArrowThickness 2
+skinparam roundcorner 8
+skinparam linetype ortho
+
+' ── ENUMS ──
+enum Role {
+  USER
+  ADMIN
+}
+
+enum SourceType {
+  FILE
+  URL
+  YAHOO
+  ALPHAVANTAGE
+}
+
+' ── ENTITIES ──
+class User {
+  - Long id
+  - String email
+  - String password
+  - String firstName
+  - String lastName
+  - Role role
+  - LocalDateTime createdAt
+  - String resetToken
+  - LocalDateTime resetTokenExpiry
+}
+
+class Dataset {
+  - Long id
+  - Long userId
+  - String fileName
+  - String filePath
+  - String apiUrl
+  - SourceType sourceType
+  - boolean temporary
+  - LocalDateTime createdAt
+}
+
+class StockPrice {
+  - Long id
+  - Long datasetId
+  - String symbol
+  - LocalDate date
+  - Double open
+  - Double high
+  - Double low
+  - Double close
+  - Double volume
+}
+
+class Prediction {
+  - Long id
+  - Long userId
+  - String company
+  - Long datasetId
+  - String modelType
+  - String parameters
+  - String resultJson
+  - LocalDateTime createdAt
+}
+
+' ── ENUM USAGE ──
+' Added dashes to make the lines longer
+User    ---- Role       
+Dataset ---- SourceType 
+
+' ── ASSOCIATIONS ──
+' Added dashes to physically push the connected classes further apart
+User       "1" ---- "0..*" Dataset    : owns
+User       "1" ---- "0..*" Prediction : saves
+Dataset    "1" ---- "0..*" StockPrice : contains
+Dataset    "1" ---- "0..*" Prediction : used in
+
+@enduml

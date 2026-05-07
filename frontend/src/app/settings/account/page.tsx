@@ -15,7 +15,6 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
 import { useAuth } from "@/contexts/auth.context"
 import { changePassword } from "@/lib/api/auth.api"
 import { toast } from "sonner"
