@@ -39,22 +39,27 @@ public class AuthService {
             throw new IllegalArgumentException("Email already in use");
         }
 
+        String verificationToken = UUID.randomUUID().toString();
+
         User user = User.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(Role.USER)
+                .emailVerificationToken(verificationToken)
+                .emailVerified(false)
                 .build();
 
         userRepository.save(user);
 
         try {
-            emailService.sendWelcomeEmail(user.getEmail(), user.getFirstName(), user.getLastName());
-            System.out.println("Welcome email sent successfully to: " + user.getEmail());
+            emailService.sendVerificationEmail(user.getEmail(), user.getFirstName(), verificationToken);
+            System.out.println("Verification email sent successfully to: " + user.getEmail());
         } catch (Exception e) {
-            System.err.println("Failed to send welcome email to " + user.getEmail() + ": " + e.getMessage());
+            System.err.println("Failed to send verification email to " + user.getEmail() + ": " + e.getMessage());
             e.printStackTrace();
+            throw new RuntimeException("Failed to send verification email");
         }
 
         String token = jwtUtil.generateToken(user.getEmail());
@@ -68,6 +73,10 @@ public class AuthService {
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new BadCredentialsException("Invalid password");
+        }
+
+        if (!user.isEmailVerified()) {
+            throw new BadCredentialsException("Please verify your email address before logging in. Check your inbox for the verification link.");
         }
 
         String token = jwtUtil.generateToken(user.getEmail());
@@ -133,5 +142,30 @@ public class AuthService {
         user.setResetToken(null);
         user.setResetTokenExpiry(null);
         userRepository.save(user);
+    }
+
+    public AuthResponse verifyEmail(String token) {
+        User user = userRepository.findByEmailVerificationToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid verification token"));
+
+        if (user.isEmailVerified()) {
+            throw new IllegalArgumentException("Email already verified");
+        }
+
+        user.setEmailVerified(true);
+        user.setEmailVerificationToken(null);
+        userRepository.save(user);
+
+        try {
+            emailService.sendWelcomeEmail(user.getEmail(), user.getFirstName(), user.getLastName());
+            System.out.println("Welcome email sent successfully to: " + user.getEmail());
+        } catch (Exception e) {
+            System.err.println("Failed to send welcome email to " + user.getEmail() + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        String jwtToken = jwtUtil.generateToken(user.getEmail());
+        return new AuthResponse(jwtToken, user.getId(), user.getEmail(),
+                user.getFirstName(), user.getLastName(), user.getRole().name());
     }
 }

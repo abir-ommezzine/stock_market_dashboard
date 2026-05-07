@@ -1,10 +1,3 @@
-// CHANGES:
-// 1. Replaced GitHub/Apple/Meta with Google + Sign in (GitHub icon)
-// 2. Wired form to auth context — calls register() and redirects to /dashboard
-// 3. Added password match validation
-// 4. Added loading and error states
-// 5. Fixed links to use react-router Link
-
 "use client"
 
 import { cn } from "@/lib/utils"
@@ -16,16 +9,14 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Logo } from "@/components/logo"
 import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
-import { useAuth } from "@/contexts/auth.context"
 import { register as registerApi } from "@/lib/api/auth.api"
-import { Loader2 } from "lucide-react"
+import { Loader2, Mail } from "lucide-react"
 
 export function SignupForm3({
   className,
   ...props
 }: React.ComponentProps<"div">) {
   const navigate  = useNavigate()
-  const { login } = useAuth()
 
   const [firstName,       setFirstName]       = useState("")
   const [lastName,        setLastName]        = useState("")
@@ -35,6 +26,7 @@ export function SignupForm3({
   const [agreed,          setAgreed]          = useState(false)
   const [loading,         setLoading]         = useState(false)
   const [error,           setError]           = useState<string | null>(null)
+  const [success,         setSuccess]         = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -57,14 +49,50 @@ export function SignupForm3({
 
     setLoading(true)
     try {
-      const user = await registerApi({ firstName, lastName, email, password, confirmPassword })
-      login(user)
-      navigate("/dashboard")
+      await registerApi({ firstName, lastName, email, password, confirmPassword })
+      setSuccess(true)
     } catch (err: any) {
       setError(err.message || "Registration failed. Please try again.")
     } finally {
       setLoading(false)
     }
+  }
+
+  if (success) {
+    return (
+      <div className={cn("flex flex-col gap-6", className)} {...props}>
+        <Card className="overflow-hidden">
+          <CardContent className="p-8">
+            <div className="flex flex-col items-center text-center gap-6">
+              <div className="bg-primary/10 text-primary flex size-16 items-center justify-center rounded-full">
+                <Mail className="size-8" />
+              </div>
+              
+              <div className="space-y-2">
+                <h1 className="text-2xl font-bold">Check Your Email</h1>
+                <p className="text-muted-foreground text-balance">
+                  We've sent a verification email to
+                </p>
+                <p className="font-semibold text-lg">{email}</p>
+              </div>
+
+              <div className="bg-muted/50 p-4 rounded-lg text-sm text-left w-full">
+                <p className="mb-2">Please check your inbox and click the verification link to complete your registration.</p>
+                <p className="text-muted-foreground">If you don't see the email, check your spam folder.</p>
+              </div>
+
+              <Button 
+                onClick={() => navigate("/auth/sign-in-3")} 
+                variant="outline" 
+                className="w-full"
+              >
+                Back to Sign In
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (

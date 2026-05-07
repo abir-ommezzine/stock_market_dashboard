@@ -172,7 +172,7 @@ export default function AdminPage() {
           <div className="bg-primary text-primary-foreground flex size-8 items-center justify-center rounded-md">
             <Logo size={20} />
           </div>
-          <span className="font-semibold text-lg">StockAI Admin</span>
+          <span className="font-semibold text-lg">Stocky Admin</span>
           <Badge variant="destructive" className="text-xs">Admin</Badge>
         </div>
         <div className="flex items-center gap-3">
@@ -680,7 +680,7 @@ export default function AdminPage() {
                 <label className="text-sm font-medium">Email</label>
                 <Input
                   type="text"
-                  placeholder="admin@stockai.com"
+                  placeholder="admin@stocky.com"
                   value={adminForm.email}
                   onChange={(e) => setAdminForm(prev => ({ ...prev, email: e.target.value }))}
                 />

@@ -44,6 +44,12 @@ public class User {
     @Column
     private LocalDateTime resetTokenExpiry;
 
+    @Column
+    private String emailVerificationToken;
+
+    @Column
+    private boolean emailVerified;
+
     @PrePersist
     protected void onCreate() {
         if (this.createdAt == null) this.createdAt = LocalDateTime.now();

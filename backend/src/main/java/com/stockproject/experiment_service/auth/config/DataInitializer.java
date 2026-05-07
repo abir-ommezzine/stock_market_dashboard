@@ -32,6 +32,7 @@ public class DataInitializer implements ApplicationRunner {
                     .email(adminEmail)
                     .password(passwordEncoder.encode("admin123"))
                     .role(Role.ADMIN)
+                    .emailVerified(true)
                     .build();
             admin.setCreatedAt(LocalDateTime.now());
             userRepository.save(admin);
