@@ -60,17 +60,37 @@ export function SignupForm1({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
-        <CardHeader className="text-center">
-          <CardTitle className="text-xl">Create Account</CardTitle>
-          <CardDescription>
-            Enter your information to create a new account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+      <Card className="overflow-hidden p-0">
+        <CardContent className="grid p-0 md:grid-cols-2">
+
+          {/* ── Left: image ── */}
+          <div className="relative hidden md:block">
+            <img
+              src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&auto=format&fit=crop"
+              alt="Stock market chart"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <div className="absolute inset-0 bg-black/40 flex flex-col justify-end p-8">
+              <p className="text-white text-2xl font-bold leading-snug">
+                Start predicting.<br />Start growing.
+              </p>
+              <p className="text-white/70 text-sm mt-2">
+                Join thousands of investors using AI to forecast the market.
+              </p>
+            </div>
+          </div>
+
+          {/* ── Right: form ── */}
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
-              <div className="grid gap-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 md:p-8">
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-col items-center text-center">
+                  <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
+                  <CardDescription className="mt-1">
+                    Enter your information to create a new account
+                  </CardDescription>
+                </div>
+
                 <div className="grid gap-4">
                   <div className="grid grid-cols-2 gap-3">
                     <FormField
@@ -107,11 +127,7 @@ export function SignupForm1({
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input
-                            type="email"
-                            placeholder="m@example.com"
-                            {...field}
-                          />
+                          <Input type="email" placeholder="m@example.com" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -164,7 +180,6 @@ export function SignupForm1({
                   <Button type="submit" className="w-full cursor-pointer">
                     Create Account
                   </Button>
-
                   <Button variant="outline" className="w-full cursor-pointer" type="button">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                       <path
@@ -175,6 +190,7 @@ export function SignupForm1({
                     Sign up with Google
                   </Button>
                 </div>
+
                 <div className="text-center text-sm">
                   Already have an account?{" "}
                   <a href="/auth/sign-in" className="underline underline-offset-4">
@@ -184,8 +200,10 @@ export function SignupForm1({
               </div>
             </form>
           </Form>
+
         </CardContent>
       </Card>
+
       <div className="text-muted-foreground *:[a]:hover:text-primary text-center text-xs text-balance *:[a]:underline *:[a]:underline-offset-4">
         By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
         and <a href="#">Privacy Policy</a>.

@@ -1,5 +1,6 @@
 @startuml Authentication - Black Box Sequence Diagram
-
+hide footbox
+skinparam BoxPadding 300
 skinparam sequenceArrowThickness 2
 skinparam roundcorner 8
 skinparam sequenceActorBorderColor #2C3E50
@@ -13,12 +14,12 @@ skinparam noteBackgroundColor #FFF8E1
 
 actor "User" as User
 
-box "System" #1A1A2E
+box "System" #F4F6F9
     participant "Stock Market\nPrediction Dashboard" as System #2C3E50
 end box
 
 ' ═══════════════════════════════════════════
-' REGISTER
+' REGISTER           
 ' ═══════════════════════════════════════════
 group #E8F4FD "Register"
     User  -> System : Fill registration form\n(firstName, lastName, email, password)
