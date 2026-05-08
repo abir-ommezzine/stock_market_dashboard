@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -21,6 +23,7 @@ export function DatasourceForm({ onNext }: Props) {
 
   const [sources, setSources] = useState<any[]>([])
   const [selected, setSelected] = useState("")
+  const [apiKey, setApiKey] = useState("")
   const { user } = useAuth()
   const userId = user?.id ?? 1
 
@@ -44,28 +47,59 @@ export function DatasourceForm({ onNext }: Props) {
   const handleContinue = async () => {
     const dataset = await createPredefinedDataset(
       selected,
-      userId
+      userId,
+      apiKey || undefined // Pass API key if provided
     )
 
     onNext(dataset)
   }
 
+  // Show API key input only for Alpha Vantage
+  const showApiKeyInput = selected === "ALPHAVANTAGE"
+
   return (
     <div className="space-y-4 mt-4">
 
-      <Select onValueChange={setSelected}>
-        <SelectTrigger>
-          <SelectValue placeholder="Choose datasource" />
-        </SelectTrigger>
+      <div className="space-y-2">
+        <Label>Data Source</Label>
+        <Select onValueChange={setSelected}>
+          <SelectTrigger>
+            <SelectValue placeholder="Choose datasource" />
+          </SelectTrigger>
 
-        <SelectContent>
-          {sources.map((s) => (
-            <SelectItem key={s.value} value={s.value}>
-              {s.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+          <SelectContent>
+            {sources.map((s) => (
+              <SelectItem key={s.value} value={s.value}>
+                {s.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {showApiKeyInput && (
+        <div className="space-y-2">
+          <Label htmlFor="apiKey">Alpha Vantage API Key</Label>
+          <Input
+            id="apiKey"
+            type="text"
+            placeholder="Enter your API key (optional)"
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">
+            Get a free API key at{" "}
+            <a
+              href="https://www.alphavantage.co/support/#api-key"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              alphavantage.co
+            </a>
+          </p>
+        </div>
+      )}
 
       <Button
         disabled={!selected}

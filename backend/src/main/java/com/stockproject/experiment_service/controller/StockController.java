@@ -11,7 +11,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/stocks")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "http://localhost:5173", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.OPTIONS})
 public class StockController {
 
     private final DatasetRepository datasetRepository;
@@ -41,10 +41,17 @@ public class StockController {
         params.put("symbol", req.getSymbol());
         params.put("url", dataset.getApiUrl());
         params.put("path", dataset.getFilePath());
+        
+        // Pass API key if available
+        if (dataset.getApiKey() != null && !dataset.getApiKey().isEmpty()) {
+            params.put("apiKey", dataset.getApiKey());
+        }
+        
         System.out.println("REQ SYMBOL = " + req.getSymbol());
         System.out.println("DATASET API URL = " + dataset.getApiUrl());
         System.out.println("DATASET FILE PATH = " + dataset.getFilePath());
         System.out.println("DATASET SOURCE TYPE = " + dataset.getSourceType());
+        System.out.println("DATASET API KEY = " + (dataset.getApiKey() != null ? "***PROVIDED***" : "NOT PROVIDED"));
         try {
             System.out.println("PARAMS: " + params);
             return provider.load(params);
