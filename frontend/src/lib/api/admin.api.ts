@@ -50,23 +50,17 @@ export async function getAllPredictions(): Promise<PredictionSummary[]> {
   if (!res.ok) throw new Error("Failed to fetch predictions")
   const predictions: any[] = await res.json()
   
-  const usersRes = await apiFetch("/api/admin/users")
-  const users: UserSummary[] = usersRes.ok ? await usersRes.json() : []
-  
-  const userMap = new Map<number, UserSummary>(users.map((u) => [u.id, u]))
-  
-  return predictions.map((p) => {
-    const user = userMap.get(p.userId) || { email: 'Unknown', firstName: 'Unknown', lastName: '' }
-    return {
-      id: p.id,
-      userId: p.userId,
-      userEmail: user.email,
-      userName: `${user.firstName} ${user.lastName}`.trim() || 'Unknown',
-      company: p.company,
-      modelType: p.modelType,
-      createdAt: p.createdAt,
-    }
-  })
+  return predictions.map((p) => ({
+    id: p.id,
+    userId: p.userId,
+    userEmail: p.userEmail || 'unknown@example.com',
+    userName: p.userFirstName && p.userLastName 
+      ? `${p.userFirstName} ${p.userLastName}`.trim() 
+      : p.userFirstName || 'Unknown User',
+    company: p.company,
+    modelType: p.modelType,
+    createdAt: p.createdAt,
+  }))
 }
 
 export interface CreateAdminRequest {

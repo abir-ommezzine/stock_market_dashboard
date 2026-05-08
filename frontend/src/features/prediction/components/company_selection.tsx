@@ -18,25 +18,42 @@ interface Props {
 export function CompanySelection({ dataInput, onBack }: Props) {
   const [query, setQuery]       = useState("")
   const [company, setCompany]   = useState("")
-  const [symbols, setSymbols]   = useState<string[]>([])
+  const [symbols, setSymbols]   = useState<Array<{symbol: string, name: string}>>([])
   const [isLoading, setIsLoading] = useState(false)
   const [open, setOpen]         = useState(false)
   const [isInWatchlist, setIsInWatchlist] = useState(false)
+  const [searchLoading, setSearchLoading] = useState(false)
   const containerRef            = useRef<HTMLDivElement>(null)
   const navigate                = useNavigate()
   const { isAuthenticated, user } = useAuth()
 
-  // Fetch symbols when component loads
+  // Fetch initial symbols when component loads
   useEffect(() => {
     if (dataInput?.id) {
       setIsLoading(true)
-      fetch(`http://localhost:8083/api/datasets/${dataInput.id}/symbols`)
+      fetch(`http://localhost:8083/api/datasets/stocks/search`)
         .then(res => res.json())
-        .then(data => setSymbols(data.filter((s: string) => s && s.trim() !== "")))
+        .then(data => setSymbols(data))
         .catch(err => console.error("Failed to fetch symbols", err))
         .finally(() => setIsLoading(false))
     }
   }, [dataInput])
+
+  // Search symbols as user types
+  useEffect(() => {
+    if (query.length > 0) {
+      setSearchLoading(true)
+      const timeoutId = setTimeout(() => {
+        fetch(`http://localhost:8083/api/datasets/stocks/search?query=${encodeURIComponent(query)}`)
+          .then(res => res.json())
+          .then(data => setSymbols(data))
+          .catch(err => console.error("Failed to search symbols", err))
+          .finally(() => setSearchLoading(false))
+      }, 300) // Debounce search by 300ms
+      
+      return () => clearTimeout(timeoutId)
+    }
+  }, [query])
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -97,11 +114,6 @@ export function CompanySelection({ dataInput, onBack }: Props) {
     }
   }
 
-  const filtered = symbols.filter(s =>
-    s.toLowerCase().startsWith(query.toLowerCase()) ||
-    s.toLowerCase().includes(query.toLowerCase())
-  )
-
   const handleSelect = (symbol: string) => {
     setCompany(symbol)
     setQuery(symbol)
@@ -158,27 +170,30 @@ export function CompanySelection({ dataInput, onBack }: Props) {
 
           {/* Dropdown */}
           {open && (
-            <div className="absolute z-50 mt-1 w-full rounded-md border border-border bg-popover shadow-md max-h-52 overflow-y-auto">
-              {isLoading ? (
+            <div className="absolute z-50 mt-1 w-full rounded-md border border-border bg-popover shadow-md max-h-64 overflow-y-auto">
+              {(isLoading || searchLoading) ? (
                 <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
                   <Loader2 className="size-4 animate-spin" />
-                  Loading symbols...
+                  Searching...
                 </div>
-              ) : filtered.length === 0 ? (
+              ) : symbols.length === 0 ? (
                 <div className="px-3 py-2 text-sm text-muted-foreground">
                   No symbols match "{query}"
                 </div>
               ) : (
-                filtered.map(symbol => (
+                symbols.map(stock => (
                   <button
-                    key={symbol}
-                    onMouseDown={() => handleSelect(symbol)}
+                    key={stock.symbol}
+                    onMouseDown={() => handleSelect(stock.symbol)}
                     className={cn(
-                      "w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors",
-                      company === symbol && "bg-primary/10 text-primary font-medium"
+                      "w-full text-left px-3 py-2 hover:bg-accent hover:text-accent-foreground transition-colors",
+                      company === stock.symbol && "bg-primary/10 text-primary font-medium"
                     )}
                   >
-                    {symbol}
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-sm">{stock.symbol}</span>
+                      <span className="text-xs text-muted-foreground">{stock.name}</span>
+                    </div>
                   </button>
                 ))
               )}

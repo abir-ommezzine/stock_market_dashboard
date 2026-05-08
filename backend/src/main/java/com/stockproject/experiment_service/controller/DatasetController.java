@@ -6,6 +6,7 @@ import com.stockproject.experiment_service.model.SourceType;
 import com.stockproject.experiment_service.model.StockPrice;
 import com.stockproject.experiment_service.provider.DataSourceProvider;
 import com.stockproject.experiment_service.service.DatasetService;
+import com.stockproject.experiment_service.util.StockSymbols;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -18,6 +19,7 @@ import com.stockproject.experiment_service.repository.StockPriceRepository;
 import com.stockproject.experiment_service.provider.ProviderFactory;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/datasets")
@@ -148,8 +150,8 @@ public class DatasetController {
 
             case YAHOO:
             case ALPHAVANTAGE:
-                // Predefined popular symbols for API sources
-                symbols = List.of("AAPL", "GOOGL", "MSFT", "AMZN", "TSLA");
+                // Return comprehensive list of popular stocks
+                symbols = StockSymbols.getSymbolsOnly();
                 break;
 
             default:
@@ -157,5 +159,20 @@ public class DatasetController {
         }
 
         return ResponseEntity.ok(symbols);
+    }
+    
+    @GetMapping("/stocks/search")
+    @CrossOrigin(origins = "http://localhost:5173")
+    public ResponseEntity<List<Map<String, String>>> searchStocks(
+            @RequestParam(required = false, defaultValue = "") String query) {
+        
+        List<Map<String, String>> results = StockSymbols.searchStocks(query).stream()
+            .map(stock -> Map.of(
+                "symbol", stock.getSymbol(),
+                "name", stock.getName()
+            ))
+            .collect(Collectors.toList());
+        
+        return ResponseEntity.ok(results);
     }
 }

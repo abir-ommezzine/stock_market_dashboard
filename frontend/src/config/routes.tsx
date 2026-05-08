@@ -6,6 +6,8 @@ const HistoricalPricesPage = lazy(
 const Historic = lazy(() => import('@/app/historic/page'))
 const Watchlist = lazy(() => import('@/app/watchlist/page'))
 const Admin = lazy(() => import('@/app/admin/page'))
+const UserSupport = lazy(() => import('@/app/dashboard/support/page'))
+const AdminSupport = lazy(() => import('@/app/admin/support/page'))
 // Lazy load components for better performance
 const Landing = lazy(() => import('@/app/landing/page'))
 const Dashboard = lazy(() => import('@/app/dashboard-2/page'))
@@ -29,6 +31,7 @@ const ForgotPassword2 = lazy(() => import('@/app/auth/forgot-password-2/page'))
 const ForgotPassword3 = lazy(() => import('@/app/auth/forgot-password-3/page'))
 const ResetPassword = lazy(() => import('@/app/auth/reset-password/page'))
 const VerifyEmail = lazy(() => import('@/app/auth/verify-email/page'))
+const OAuth2Redirect = lazy(() => import('@/app/auth/oauth2/redirect/page'))
 
 // Error pages
 const Unauthorized = lazy(() => import('@/app/errors/unauthorized/page'))
@@ -148,6 +151,10 @@ export const routes: RouteConfig[] = [
     path: "/auth/verify-email",
     element: <VerifyEmail />
   },
+  {
+    path: "/auth/oauth2/redirect",
+    element: <OAuth2Redirect />
+  },
 
   // Error Pages
   {
@@ -213,6 +220,16 @@ export const routes: RouteConfig[] = [
   {
     path: "/admin",
     element: <Admin />
+  },
+
+  // Support Routes
+  {
+    path: "/dashboard/support",
+    element: <UserSupport />
+  },
+  {
+    path: "/admin/support",
+    element: <AdminSupport />
   },
 
   // Catch-all route for 404

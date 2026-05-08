@@ -21,7 +21,7 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
+    @Column
     private String password;
 
     @Column(nullable = false)
@@ -49,6 +49,12 @@ public class User {
 
     @Column
     private boolean emailVerified;
+
+    @Column
+    private String provider;
+
+    @Column
+    private String providerId;
 
     @PrePersist
     protected void onCreate() {

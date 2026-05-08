@@ -19,6 +19,8 @@ export function SiteHeader() {
   const isPrediction = location.pathname === "/prediction/historical"
   const isWatchlist  = location.pathname === "/watchlist"
   const isAdmin      = location.pathname === "/admin"
+  const isSupport    = location.pathname.includes("/support")
+  const isDashboard  = location.pathname === "/dashboard"
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -49,8 +51,8 @@ export function SiteHeader() {
           </div>
           <div className="ml-auto flex items-center gap-2">
 
-            {/* Dashboard button — shown on history, prediction, watchlist, and admin pages */}
-            {(isHistoric || isPrediction || isWatchlist || isAdmin) && (
+            {/* Dashboard button — shown on history, prediction, watchlist, support, and admin pages */}
+            {(isHistoric || isPrediction || isWatchlist || isAdmin || isSupport) && !isDashboard && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -58,6 +60,18 @@ export function SiteHeader() {
                 onClick={() => navigate('/dashboard')}
               >
                 Dashboard
+              </Button>
+            )}
+
+            {/* Prediction button — shown when not on prediction page */}
+            {isAuthenticated && !isPrediction && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hidden sm:flex dark:text-foreground"
+                onClick={() => navigate('/prediction/historical')}
+              >
+                Prediction
               </Button>
             )}
 
@@ -82,6 +96,18 @@ export function SiteHeader() {
                 onClick={() => navigate('/historic')}
               >
                 History
+              </Button>
+            )}
+
+            {/* Support button — shown to all authenticated users */}
+            {isAuthenticated && !isSupport && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hidden sm:flex dark:text-foreground"
+                onClick={() => navigate(user?.role === 'ADMIN' ? '/admin/support' : '/dashboard/support')}
+              >
+                Support
               </Button>
             )}
 
