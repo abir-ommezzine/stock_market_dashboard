@@ -13,7 +13,8 @@ export async function getSources() {
 
 export const createPredefinedDataset = async (
   sourceName: string,
-  userId?: number
+  userId?: number,
+  apiKey?: string
 ) => {
   const params = new URLSearchParams()
   params.append("sourceName", sourceName)
@@ -21,6 +22,10 @@ export const createPredefinedDataset = async (
 
   if (userId !== undefined) {
     params.append("userId", userId.toString())
+  }
+
+  if (apiKey) {
+    params.append("apiKey", apiKey)
   }
 
   const res = await apiFetch(

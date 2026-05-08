@@ -32,6 +32,18 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
+        // Skip JWT validation for permitAll endpoints
+        String requestPath = request.getRequestURI();
+        String method = request.getMethod();
+        
+        System.out.println("JwtAuthFilter - Path: " + requestPath + ", Method: " + method);
+        
+        if (isPermitAllEndpoint(requestPath)) {
+            System.out.println("JwtAuthFilter - Skipping JWT validation for permitAll endpoint: " + requestPath);
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         final String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -57,5 +69,22 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private boolean isPermitAllEndpoint(String path) {
+        return path.startsWith("/api/auth/") ||
+               path.equals("/api/status") ||
+               path.startsWith("/api/datasets/") ||
+               path.startsWith("/api/stocks/") ||
+               path.startsWith("/api/ml/") ||
+               path.startsWith("/api/predictions/") ||
+               path.startsWith("/api/watchlist/") ||
+               path.startsWith("/api/admin/") ||
+               path.startsWith("/api/chat/") ||
+               path.startsWith("/v3/api-docs/") ||
+               path.startsWith("/swagger-ui/") ||
+               path.equals("/swagger-ui.html") ||
+               path.startsWith("/oauth2/") ||
+               path.startsWith("/login/oauth2/");
     }
 }

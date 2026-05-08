@@ -14,9 +14,9 @@ type FaqItem = {
 const faqItems: FaqItem[] = [
   {
     value: 'item-1',
-    question: 'How do I use StockAI prediction features?',
+    question: 'How do I use Stocky prediction features?',
     answer:
-      'Using StockAI is simple! Upload your stock data or connect to our API, select your prediction model (ARIMA, SARIMA, or ARMA), and let our AI analyze the data. Each prediction comes with detailed metrics and visualizations to help you make informed decisions.',
+      'Using Stocky is simple! Upload your stock data or connect to our API, select your prediction model (ARIMA, SARIMA, or ARMA), and let our AI analyze the data. Each prediction comes with detailed metrics and visualizations to help you make informed decisions.',
   },
   {
     value: 'item-2',
@@ -38,9 +38,9 @@ const faqItems: FaqItem[] = [
   },
   {
     value: 'item-5',
-    question: 'What technologies power StockAI?',
+    question: 'What technologies power Stocky?',
     answer:
-      'StockAI is built with React, TypeScript, and Tailwind CSS for the frontend. Our prediction engine uses Python with advanced time series models (ARIMA, SARIMA, ARMA) and machine learning algorithms. We use PostgreSQL for data storage and FastAPI for our backend services.',
+      'Stocky is built with React, TypeScript, and Tailwind CSS for the frontend. Our prediction engine uses Python with advanced time series models (ARIMA, SARIMA, ARMA) and machine learning algorithms. We use PostgreSQL for data storage and FastAPI for our backend services.',
   },
   {
     value: 'item-6',
@@ -61,7 +61,7 @@ const FaqSection = () => {
             Frequently Asked Questions
           </h2>
           <p className="text-lg text-muted-foreground">
-            Everything you need to know about StockAI predictions, features, and integration. Still have questions? We're here to help!
+            Everything you need to know about Stocky predictions, features, and integration. Still have questions? We're here to help!
           </p>
         </div>
 

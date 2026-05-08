@@ -7,7 +7,7 @@ export function Logo({ size = 24, className }: LogoProps) {
   return (
     <img
       src="/little logo.png"
-      alt="StockAI logo"
+      alt="Stocky logo"
       width={size}
       height={size}
       className={className}

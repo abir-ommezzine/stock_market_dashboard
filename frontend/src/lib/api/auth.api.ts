@@ -102,3 +102,17 @@ export async function changePassword(userId: number, currentPassword: string, ne
     throw new Error(err.error || "Failed to change password")
   }
 }
+
+export async function verifyEmail(token: string): Promise<AuthUser> {
+  const res = await fetch(`${API_BASE}/verify-email?token=${token}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  })
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || "Failed to verify email")
+  }
+
+  return res.json()
+}
