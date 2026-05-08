@@ -146,10 +146,13 @@ public class AuthService {
 
     public AuthResponse verifyEmail(String token) {
         User user = userRepository.findByEmailVerificationToken(token)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid verification token"));
+                .orElseThrow(() -> new IllegalArgumentException("Invalid or expired verification token"));
 
         if (user.isEmailVerified()) {
-            throw new IllegalArgumentException("Email already verified");
+            // If already verified, just return the auth response to allow login
+            String jwtToken = jwtUtil.generateToken(user.getEmail());
+            return new AuthResponse(jwtToken, user.getId(), user.getEmail(),
+                    user.getFirstName(), user.getLastName(), user.getRole().name());
         }
 
         user.setEmailVerified(true);
