@@ -69,16 +69,17 @@ class AuthServiceTest {
         when(userRepository.existsByEmail(anyString())).thenReturn(false);
         when(passwordEncoder.encode(anyString())).thenReturn("hashed_password");
         when(userRepository.save(any(User.class))).thenReturn(existingUser);
-        when(jwtUtil.generateToken(anyString())).thenReturn("mock_jwt_token");
-        doNothing().when(emailService).sendWelcomeEmail(anyString(), anyString(), anyString());
+        // Note: No JWT token generated during registration anymore (email verification required)
+        doNothing().when(emailService).sendVerificationEmail(anyString(), anyString(), anyString());
 
         AuthResponse response = authService.register(registerRequest);
 
         assertThat(response).isNotNull();
-        assertThat(response.getToken()).isEqualTo("mock_jwt_token");
+        assertThat(response.getToken()).isNull(); // No token until email is verified
         assertThat(response.getEmail()).isEqualTo("john@example.com");
         assertThat(response.getRole()).isEqualTo("USER");
         verify(userRepository).save(any(User.class));
+        verify(emailService).sendVerificationEmail(anyString(), anyString(), anyString());
     }
 
     @Test
@@ -92,25 +93,25 @@ class AuthServiceTest {
     }
 
     @Test
-    void register_shouldStillSucceed_whenEmailServiceFails() {
+    void register_shouldThrow_whenEmailServiceFails() {
         when(userRepository.existsByEmail(anyString())).thenReturn(false);
         when(passwordEncoder.encode(anyString())).thenReturn("hashed_password");
         when(userRepository.save(any(User.class))).thenReturn(existingUser);
-        when(jwtUtil.generateToken(anyString())).thenReturn("mock_jwt_token");
-        // Email service throws — registration should not fail
+        // Email service throws — registration should fail
         doThrow(new RuntimeException("SMTP error"))
-                .when(emailService).sendWelcomeEmail(anyString(), anyString(), anyString());
+                .when(emailService).sendVerificationEmail(anyString(), anyString(), anyString());
 
-        AuthResponse response = authService.register(registerRequest);
-
-        assertThat(response).isNotNull();
-        assertThat(response.getToken()).isEqualTo("mock_jwt_token");
+        assertThrows(RuntimeException.class,
+                () -> authService.register(registerRequest));
     }
 
     // ── LOGIN ─────────────────────────────────────────────────────────────────
 
     @Test
     void login_shouldReturnAuthResponse_whenCredentialsAreValid() {
+        // Mark user as verified
+        existingUser.setEmailVerified(true);
+        
         when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(existingUser));
         when(passwordEncoder.matches("password123", "hashed_password")).thenReturn(true);
         when(jwtUtil.generateToken("john@example.com")).thenReturn("mock_jwt_token");
@@ -120,6 +121,16 @@ class AuthServiceTest {
         assertThat(response).isNotNull();
         assertThat(response.getToken()).isEqualTo("mock_jwt_token");
         assertThat(response.getEmail()).isEqualTo("john@example.com");
+    }
+
+    @Test
+    void login_shouldThrow_whenEmailNotVerified() {
+        // User is not verified (emailVerified = false by default)
+        when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(existingUser));
+        when(passwordEncoder.matches("password123", "hashed_password")).thenReturn(true);
+
+        assertThrows(BadCredentialsException.class,
+                () -> authService.login(loginRequest));
     }
 
     @Test

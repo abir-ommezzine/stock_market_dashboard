@@ -17,14 +17,14 @@ class TestCheckStationarity:
         np.random.seed(42)
         series = pd.Series(np.random.normal(0, 1, 200))
         result = check_stationarity(series)
-        assert result["is_stationary"] is True
+        assert result["is_stationary"] == True
 
     def test_nonstationary_series_returns_false(self):
         """A random walk (cumsum) is non-stationary."""
         np.random.seed(42)
         series = pd.Series(np.cumsum(np.random.normal(0, 1, 200)))
         result = check_stationarity(series)
-        assert result["is_stationary"] is False
+        assert result["is_stationary"] == False
 
     def test_result_contains_required_keys(self):
         """Result dict must always contain all expected keys."""
@@ -64,7 +64,7 @@ class TestFindOptimalD:
         series = pd.Series(np.cumsum(np.random.normal(0, 1, 200)))
         _, differenced = find_optimal_d(series)
         result = check_stationarity(differenced)
-        assert result["is_stationary"] is True
+        assert result["is_stationary"] == True
 
     def test_d_does_not_exceed_max(self):
         """d should never exceed the max_d parameter."""
