@@ -1,0 +1,80 @@
+@startuml Run Prediction - White Box Sequence Diagram
+
+hide footbox
+
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam sequenceActorBorderColor #2C3E50
+skinparam sequenceActorBackgroundColor #A8D5A2
+skinparam sequenceParticipantBorderColor #2C3E50
+skinparam sequenceParticipantFontColor #000000
+skinparam sequenceArrowColor #2C3E50
+skinparam noteBorderColor #E67E22
+skinparam noteBackgroundColor #FEF9E7
+skinparam sequenceBoxBorderColor #AAAAAA
+skinparam sequenceBoxFontColor #000000
+
+actor "User" as User
+
+box "Frontend (React)" #D6EAF8
+    participant "Browser" as FE #AED6F1
+end box
+
+box "Java API (Spring Boot)" #D5F5E3
+    participant "MlController" as Ctrl #A9DFBF
+    participant "MlClientService" as MlSvc #A9DFBF
+    participant "StockPriceRepository" as Repo #A9DFBF
+end box
+
+box "Database (PostgreSQL)" #FDEBD0
+    participant "stock_prices" as DB #FAD7A0
+end box
+
+box "ML Service (FastAPI)" #F9EBEA
+    participant "prediction_service" as FastAPI #F1948A
+end box
+
+' ── 1. User triggers prediction ──
+User -> FE      : Select model + params\nClick "Run Prediction"
+FE -> Ctrl      : POST /api/ml/train-from-dataset\n{ datasetId, model_type, p, d, q, steps }
+
+activate Ctrl
+
+' ── 2. Java fetches stock prices from DB ──
+Ctrl -> Repo    : findByDatasetId(datasetId)
+activate Repo
+Repo -> DB      : SELECT * FROM stock_prices\nWHERE dataset_id = ?
+activate DB
+DB --> Repo     : List<StockPrice>
+deactivate DB
+Repo --> Ctrl   : List<StockPrice>
+deactivate Repo
+
+' ── 3. Java forwards data to FastAPI ──
+Ctrl -> MlSvc   : trainModel(payload)
+activate MlSvc
+MlSvc -> FastAPI : POST /train\n{ data: [{date, close}], model_type, p, d, q, steps }
+
+activate FastAPI
+note right of FastAPI
+  1. Preprocess (pct_change)
+  2. ADF test → find d
+  3. AIC/BIC grid search → find p, q
+  4. Train model (80/20 split)
+  5. Forecast + confidence intervals
+  6. Residual diagnostics
+end note
+FastAPI --> MlSvc : PredictionResponse\n{ predictions, metrics, optimal_params, residuals }
+deactivate FastAPI
+
+MlSvc --> Ctrl  : PredictionResponse
+deactivate MlSvc
+
+' ── 4. Java returns result to Frontend ──
+Ctrl --> FE     : 200 OK\n{ predictions, metrics, optimal_params }
+deactivate Ctrl
+
+' ── 5. Frontend renders result ──
+FE --> User     : Chart updated with forecast\nMetrics displayed
+
+@enduml

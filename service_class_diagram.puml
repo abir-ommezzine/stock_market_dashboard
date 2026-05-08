@@ -1,5 +1,7 @@
 @startuml Service Layer Class Diagram
 
+top to bottom direction
+
 skinparam classBackgroundColor #EAF4FB
 skinparam classBorderColor #4A90D9
 skinparam classArrowColor #2C3E50
@@ -70,10 +72,16 @@ class EmailService {
 }
 
 ' ── DEPENDENCIES ──
-AuthService     --> JwtUtil       : uses
-AuthService     --> EmailService  : uses
+AuthService     -down-> JwtUtil       : uses
+AuthService     -down-> EmailService  : uses
 
-DatasetService  --> FileStorageService    : uses
-DatasetService  --> DatasetCleanupService : triggers
+DatasetService  -down-> FileStorageService    : uses
+DatasetService  -down-> DatasetCleanupService : triggers
+
+' ── LAYOUT ENFORCERS (Forces strict vertical stacking) ──
+AuthService -[hidden]down-> DatasetService
+DatasetService -[hidden]down-> MlClientService
+MlClientService -[hidden]down-> PredictionService
+PredictionService -[hidden]down-> WatchlistService
 
 @enduml

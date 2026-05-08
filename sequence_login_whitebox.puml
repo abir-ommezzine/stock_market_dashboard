@@ -1,0 +1,57 @@
+@startuml Login - White Box Sequence Diagram
+
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 8
+skinparam sequenceActorBorderColor #2C3E50
+skinparam sequenceActorBackgroundColor #D5E8D4
+skinparam sequenceParticipantBorderColor #4A90D9
+skinparam sequenceParticipantBackgroundColor #1A1A2E
+skinparam sequenceParticipantFontColor #FFFFFF
+skinparam sequenceArrowColor #2C3E50
+skinparam noteBorderColor #F0A500
+skinparam noteBackgroundColor #FFF8E1
+
+actor "User" as User
+
+participant "React\nFrontend" as Frontend #2C3E50
+participant "AuthController" as Controller #2C3E50
+participant "AuthService" as Service #2C3E50
+participant "UserRepository" as Repo #2C3E50
+participant "JwtUtil" as Jwt #2C3E50
+
+User -> Frontend       : Enter email & password\nClick "Login"
+Frontend -> Controller : POST /api/auth/login\n{ email, password }
+
+activate Controller
+Controller -> Service  : login(request)
+
+activate Service
+Service -> Repo        : findByEmail(email)
+activate Repo
+Repo --> Service       : User
+deactivate Repo
+
+Service -> Service     : passwordEncoder.matches\n(input, stored hash)
+
+alt Invalid credentials
+    Service --> Controller : throw BadCredentialsException
+    Controller --> Frontend : 401 Unauthorized
+    Frontend --> User      : "Invalid email or password"
+
+else Valid credentials
+    Service -> Jwt         : generateToken(email)
+    activate Jwt
+    Jwt --> Service        : JWT token
+    deactivate Jwt
+
+    Service --> Controller : AuthResponse\n{ token, userId, role, ... }
+    deactivate Service
+
+    Controller --> Frontend : 200 OK\n{ token, userId, role }
+    deactivate Controller
+
+    Frontend -> Frontend   : localStorage.setItem\n("auth_token", token)
+    Frontend --> User      : Redirect to /dashboard
+end
+
+@enduml
