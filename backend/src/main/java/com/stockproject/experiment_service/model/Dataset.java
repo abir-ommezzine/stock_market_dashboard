@@ -27,6 +27,9 @@ public class Dataset {
     @Column(nullable = true) // Stores the URL for external API datasets
     private String apiUrl;
 
+    @Column(nullable = true) // Stores the API key for external API datasets
+    private String apiKey;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private SourceType sourceType;
@@ -71,6 +74,9 @@ public class Dataset {
 
     public String getApiUrl() { return apiUrl; }
     public void setApiUrl(String apiUrl) { this.apiUrl = apiUrl; }
+
+    public String getApiKey() { return apiKey; }
+    public void setApiKey(String apiKey) { this.apiKey = apiKey; }
 
     public SourceType getSourceType() { return sourceType; }
     public void setSourceType(SourceType sourceType) { this.sourceType = sourceType; }

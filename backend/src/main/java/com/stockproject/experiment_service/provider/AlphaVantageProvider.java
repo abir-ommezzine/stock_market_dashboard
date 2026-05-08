@@ -35,8 +35,17 @@ public class AlphaVantageProvider implements DataSourceProvider {
         }
         String symbol = symObj.toString();
 
+        // Get API key from params (passed from dataset) or use default
+        String apiKey = API_KEY; // Default key
+        if (params.containsKey("apiKey") && params.get("apiKey") != null) {
+            String customKey = params.get("apiKey").toString();
+            if (!customKey.isEmpty()) {
+                apiKey = customKey;
+            }
+        }
+
         String url = "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol="
-                + symbol + "&apikey=" + API_KEY;
+                + symbol + "&apikey=" + apiKey;
 
         String response = restTemplate.getForObject(url, String.class);
         List<StockPrice> prices = new ArrayList<>();

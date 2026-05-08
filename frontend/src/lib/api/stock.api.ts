@@ -1,21 +1,19 @@
-const API = "http://localhost:8083/api";
+import { apiFetch } from "./api"
 
-export async function fetchStockData(datasetId: number,symbol: string) {
+export async function fetchStockData(datasetId: number, symbol: string) {
   console.log("Sending request:", { datasetId, symbol })
-  const res = await fetch(`${API}/stocks/fetch`, {
+  const res = await apiFetch("/api/stocks/fetch", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({datasetId,symbol,
-      /*startDate: "2020-01-01",
-      endDate: "2024-01-01",*/
-    }),
+    body: JSON.stringify({ datasetId, symbol }),
   })
 
   if (!res.ok) {
     throw new Error("Failed fetching stock data")
   }
 
-  return res.json()
+  const data = await res.json()
+  console.log("Received stock data:", data)
+  console.log("Data is array?", Array.isArray(data))
+  console.log("Data length:", data?.length)
+  return data
 }

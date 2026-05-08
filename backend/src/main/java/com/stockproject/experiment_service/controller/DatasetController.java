@@ -66,11 +66,18 @@ public class DatasetController {
     public ResponseEntity<Dataset> linkSource(
             @RequestParam SourceType sourceName,
             @RequestParam String displayName,
-            @RequestParam(required = false) Long userId) {
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) String apiKey) {
         Long uid = (userId == null) ? 0L : userId;
-        return ResponseEntity.ok(
-                datasetService.registerApiDataset(sourceName, displayName, uid)
-        );
+        Dataset dataset = datasetService.registerApiDataset(sourceName, displayName, uid);
+        
+        // Store the API key if provided
+        if (apiKey != null && !apiKey.isEmpty()) {
+            dataset.setApiKey(apiKey);
+            datasetRepository.save(dataset);
+        }
+        
+        return ResponseEntity.ok(dataset);
     }
     @Operation(summary = "Link an external CSV via URL")
     @PostMapping("/link-url")

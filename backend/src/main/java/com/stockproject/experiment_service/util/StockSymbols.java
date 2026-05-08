@@ -164,7 +164,6 @@ public class StockSymbols {
         // Entertainment & Media
         new Stock("WBD", "Warner Bros. Discovery Inc."),
         new Stock("PARA", "Paramount Global"),
-        new Stock("NFLX", "Netflix Inc."),
         new Stock("SONY", "Sony Group Corporation"),
         new Stock("EA", "Electronic Arts Inc."),
         new Stock("TTWO", "Take-Two Interactive Software"),

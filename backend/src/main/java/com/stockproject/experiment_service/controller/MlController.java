@@ -17,7 +17,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/ml")
-@CrossOrigin(origins = {"http://localhost:5173","http://localhost:5174"})
+@CrossOrigin(origins = {"http://localhost:5173","http://localhost:5174"}, allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.OPTIONS})
 public class MlController {
 
     private final MlClientService mlClientService;
@@ -69,10 +69,9 @@ public class MlController {
         List<StockPrice> prices;
 
         // CHANGED: branch based on source type
-        // FILE and URL datasets have prices already stored in the DB
-        // YAHOO and ALPHAVANTAGE need to fetch live from the external API
-        if (dataset.getSourceType() == SourceType.FILE
-                || dataset.getSourceType() == SourceType.URL) {
+        // FILE datasets have prices already stored in the DB
+        // URL, YAHOO and ALPHAVANTAGE need to fetch live from the external API
+        if (dataset.getSourceType() == SourceType.FILE) {
 
             // --- Existing flow: read prices from DB ---
             prices = stockPriceRepository.findByDatasetId(datasetId);
@@ -85,7 +84,7 @@ public class MlController {
             }
 
         } else {
-            // --- New flow: fetch live prices from Yahoo or Alpha Vantage ---
+            // --- New flow: fetch live prices from URL, Yahoo or Alpha Vantage ---
 
             // We need a symbol to fetch — it must be passed in the request body
             // e.g. { "datasetId": 7, "model_type": "ARIMA", "symbol": "AAPL" }
@@ -97,15 +96,22 @@ public class MlController {
 
             String symbol = body.get("symbol").toString();
 
-            // Get the right provider (Yahoo or AlphaVantage) based on dataset type
+            // Get the right provider (URL, Yahoo or AlphaVantage) based on dataset type
             DataSourceProvider provider = providerFactory.get(dataset.getSourceType());
 
-            // Fetch live prices — same params map format your providers already expect
-            prices = provider.load(Map.of(
-                    "symbol", symbol,
-                    "url",    dataset.getApiUrl()    != null ? dataset.getApiUrl()    : "",
-                    "path",   dataset.getFilePath()  != null ? dataset.getFilePath()  : ""
-            ));
+            // Build params map with API key if available
+            Map<String, Object> params = new java.util.HashMap<>();
+            params.put("symbol", symbol);
+            params.put("url", dataset.getApiUrl() != null ? dataset.getApiUrl() : "");
+            params.put("path", dataset.getFilePath() != null ? dataset.getFilePath() : "");
+            
+            // Add API key if provided
+            if (dataset.getApiKey() != null && !dataset.getApiKey().isEmpty()) {
+                params.put("apiKey", dataset.getApiKey());
+            }
+
+            // Fetch live prices
+            prices = provider.load(params);
 
             if (prices.isEmpty()) {
                 throw new ResponseStatusException(
