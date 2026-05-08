@@ -65,6 +65,16 @@ class WatchlistService {
   + isInWatchlist(userId, symbol) : boolean
 }
 
+' ── CHAT ──
+class ChatService {
+  + createConversation(userId, request) : ConversationResponse
+  + sendMessage(conversationId, userId, request) : MessageResponse
+  + getUserConversations(userId) : List<ConversationResponse>
+  + getAllConversations() : List<ConversationResponse>
+  + getConversation(conversationId, userId, isAdmin) : ConversationResponse
+  + closeConversation(conversationId, userId) : void
+}
+
 ' ── EMAIL ──
 class EmailService {
   + sendWelcomeEmail(email, firstName, lastName) : void
