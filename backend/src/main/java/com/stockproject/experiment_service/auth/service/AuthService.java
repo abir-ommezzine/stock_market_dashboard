@@ -75,7 +75,8 @@ public class AuthService {
             throw new BadCredentialsException("Invalid password");
         }
 
-        if (!user.isEmailVerified()) {
+        // Skip email verification check for admin users
+        if (!user.isEmailVerified() && user.getRole() != Role.ADMIN) {
             throw new BadCredentialsException("Please verify your email address before logging in. Check your inbox for the verification link.");
         }
 

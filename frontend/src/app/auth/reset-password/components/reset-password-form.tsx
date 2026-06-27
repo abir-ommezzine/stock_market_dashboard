@@ -156,11 +156,12 @@ export function ResetPasswordForm({
             </div>
           </form>
 
-          <div className="bg-muted relative hidden md:block">
+          {/* Right side image */}
+          <div className="relative hidden md:block overflow-hidden">
             <img
-              src="https://ui.shadcn.com/placeholder.svg"
-              alt="Image"
-              className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.95] dark:invert"
+              src="/logo.png"
+              alt="Stock market chart"
+              className="absolute inset-0 h-full w-full object-cover scale-85"
             />
           </div>
         </CardContent>

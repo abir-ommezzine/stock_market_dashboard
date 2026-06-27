@@ -59,6 +59,13 @@ export function SignupForm3({
   }
 
   if (success) {
+    // Debug: Check if pending save state is still in localStorage
+    const pendingSave = localStorage.getItem("pendingSave")
+    const pendingSaveState = localStorage.getItem("pendingSaveState")
+    console.log("=== Signup Success Screen ===")
+    console.log("pendingSave:", pendingSave)
+    console.log("pendingSaveState:", pendingSaveState)
+    
     return (
       <div className={cn("flex flex-col gap-6", className)} {...props}>
         <Card className="overflow-hidden">
@@ -79,6 +86,11 @@ export function SignupForm3({
               <div className="bg-muted/50 p-4 rounded-lg text-sm text-left w-full">
                 <p className="mb-2">Please check your inbox and click the verification link to complete your registration.</p>
                 <p className="text-muted-foreground">If you don't see the email, check your spam folder.</p>
+                {pendingSave === "true" && (
+                  <p className="text-primary font-medium mt-2">
+                    ✓ Your prediction will be saved after verification
+                  </p>
+                )}
               </div>
 
               <Button 

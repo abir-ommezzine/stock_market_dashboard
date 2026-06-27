@@ -4,7 +4,6 @@ import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/contexts/auth.context"
 import { getAdminStats, getAllUsers, searchUsers, getAllPredictions, createAdmin, type AdminStats, type UserSummary, type PredictionSummary } from "@/lib/api/admin.api"
-import { watchlistApi, type WatchlistItem } from "@/lib/api/watchlist.api"
 import { 
   getConversations, 
   getConversation, 
@@ -33,25 +32,32 @@ import {
 } from "@/components/ui/dialog"
 import {
   Users, TrendingUp, BarChart3, UserPlus,
-  Search, LogOut, Loader2, Star, Trash2, Activity, Plus, LineChart, RefreshCw, Send, CheckCircle
+  Search, LogOut, Loader2, Activity, LineChart, RefreshCw, Send, CheckCircle
 } from "lucide-react"
 import { toast } from "sonner"
 import { format } from "date-fns"
 
 export default function AdminPage() {
-  const { user, logout } = useAuth()
+  const { user, logout, isAdmin } = useAuth()
   const navigate = useNavigate()
+
+  // Redirect non-admin users
+  useEffect(() => {
+    if (!isAdmin && user !== null) {
+      toast.error("Access denied. Admin privileges required.")
+      navigate("/dashboard")
+    } else if (!user) {
+      // User logged out, redirect to login without error
+      navigate("/auth/sign-in-3")
+    }
+  }, [isAdmin, user, navigate])
 
   const [stats, setStats]       = useState<AdminStats | null>(null)
   const [users, setUsers]       = useState<UserSummary[]>([])
   const [predictions, setPredictions] = useState<PredictionSummary[]>([])
-  const [watchlist, setWatchlist] = useState<WatchlistItem[]>([])
   const [search, setSearch]     = useState("")
-  const [tab, setTab]           = useState<"overview" | "users" | "predictions" | "watchlist" | "support">("overview")
+  const [tab, setTab]           = useState<"overview" | "users" | "predictions" | "support">("overview")
   const [loading, setLoading]   = useState(true)
-  const [addDialogOpen, setAddDialogOpen] = useState(false)
-  const [newSymbol, setNewSymbol] = useState("")
-  const [addingSymbol, setAddingSymbol] = useState(false)
   const [createAdminDialogOpen, setCreateAdminDialogOpen] = useState(false)
   const [adminForm, setAdminForm] = useState({ firstName: "", lastName: "", email: "", password: "" })
   const [creatingAdmin, setCreatingAdmin] = useState(false)
@@ -70,13 +76,6 @@ export default function AdminPage() {
       .then(([s, u, p]) => { setStats(s); setUsers(u); setPredictions(p) })
       .catch(console.error)
       .finally(() => setLoading(false))
-    
-    // Load watchlist if user exists
-    if (user) {
-      watchlistApi.getUserWatchlist(user.id)
-        .then(setWatchlist)
-        .catch(console.error)
-    }
   }, [user])
 
   // Refresh predictions when switching to predictions tab
@@ -102,44 +101,6 @@ export default function AdminPage() {
   }, [search])
 
   const handleLogout = () => { logout(); navigate("/dashboard") }
-
-  const handleRemoveFromWatchlist = async (symbol: string) => {
-    if (!user) return
-    try {
-      await watchlistApi.removeFromWatchlist(user.id, symbol)
-      setWatchlist(prev => prev.filter(item => item.symbol !== symbol))
-      toast.success(`${symbol} removed from watchlist`)
-    } catch (error) {
-      console.error('Failed to remove from watchlist:', error)
-      toast.error('Failed to remove from watchlist')
-    }
-  }
-
-  const handleViewPrediction = (symbol: string) => {
-    navigate(`/prediction/historical?symbol=${symbol}`)
-  }
-
-  const handleAddSymbol = async () => {
-    if (!user || !newSymbol.trim()) return
-    
-    setAddingSymbol(true)
-    try {
-      await watchlistApi.addToWatchlist({ userId: user.id, symbol: newSymbol.toUpperCase() })
-      const updatedWatchlist = await watchlistApi.getUserWatchlist(user.id)
-      setWatchlist(updatedWatchlist)
-      toast.success(`${newSymbol.toUpperCase()} added to watchlist`)
-      setNewSymbol("")
-      setAddDialogOpen(false)
-    } catch (error: any) {
-      if (error.response?.data?.error?.includes('already in watchlist')) {
-        toast.info(`${newSymbol.toUpperCase()} is already in your watchlist`)
-      } else {
-        toast.error('Failed to add to watchlist')
-      }
-    } finally {
-      setAddingSymbol(false)
-    }
-  }
 
   const handleRefreshPredictions = async () => {
     try {
@@ -294,7 +255,7 @@ export default function AdminPage() {
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
         {/* Tabs */}
         <div className="flex gap-2 border-b pb-2">
-          {(["overview", "users", "predictions", "watchlist", "support"] as const).map(t => (
+          {(["overview", "users", "predictions", "support"] as const).map(t => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -623,93 +584,6 @@ export default function AdminPage() {
               </Card>
             )}
           </div>
-        ) : tab === "watchlist" ? (
-          // ── Watchlist Tab ──
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Watchlist</h2>
-              <Button onClick={() => setAddDialogOpen(true)} className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                Add Stock
-              </Button>
-            </div>
-
-            {watchlist.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Activity className="h-12 w-12 text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Your watchlist is empty</h3>
-                  <p className="text-muted-foreground text-center mb-4">
-                    Start adding stocks to track their performance.
-                  </p>
-                  <Button onClick={() => setAddDialogOpen(true)} className="flex items-center gap-2">
-                    <Plus className="h-4 w-4" />
-                    Add Your First Stock
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Star className="h-5 w-5 fill-current text-yellow-500" />
-                    Watched Stocks ({watchlist.length})
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Symbol</TableHead>
-                        <TableHead>Added Date</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {watchlist.map((item) => (
-                        <TableRow key={item.id}>
-                          <TableCell className="font-medium">
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline">{item.symbol}</Badge>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {format(new Date(item.addedAt), 'MMM dd, yyyy')}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary" className="flex items-center gap-1 w-fit">
-                              <TrendingUp className="h-3 w-3" />
-                              Active
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleViewPrediction(item.symbol)}
-                              >
-                                Predict
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleRemoveFromWatchlist(item.symbol)}
-                                className="text-destructive hover:text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            )}
-          </div>
         ) : tab === "support" ? (
           // ── Support Tab ──
           <div className="space-y-4">
@@ -896,49 +770,6 @@ export default function AdminPage() {
             )}
           </div>
         ) : null}
-
-        {/* Add Stock Dialog */}
-        <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add Stock to Watchlist</DialogTitle>
-              <DialogDescription>
-                Enter a stock symbol to add it to your watchlist (e.g., AAPL, TSLA, GOOGL)
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <Input
-                placeholder="Stock Symbol (e.g., AAPL)"
-                value={newSymbol}
-                onChange={(e) => setNewSymbol(e.target.value.toUpperCase())}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && newSymbol.trim()) {
-                    handleAddSymbol()
-                  }
-                }}
-                autoFocus
-              />
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleAddSymbol} 
-                disabled={!newSymbol.trim() || addingSymbol}
-              >
-                {addingSymbol ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Adding...
-                  </>
-                ) : (
-                  'Add Stock'
-                )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
 
         {/* Create Admin Dialog */}
         <Dialog open={createAdminDialogOpen} onOpenChange={setCreateAdminDialogOpen}>

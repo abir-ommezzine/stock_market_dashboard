@@ -183,13 +183,14 @@ export function ModelConfigPanel({ datasetId, symbol, hasPrediction = false, pre
 
   const handleSave = () => {
     if (!isAuthenticated) {
-      // Persist the full page state so we can restore it after login
-      sessionStorage.setItem("pendingSave", "true")
-      sessionStorage.setItem("pendingSaveState", JSON.stringify(location.state))
+      // The parent component already saved the state to sessionStorage
+      // Just set the pending flag and navigate
+      // Use localStorage instead of sessionStorage so it persists across tabs
+      localStorage.setItem("pendingSave", "true")
+      
       navigate("/auth/sign-in-3", {
         state: {
           redirect: location.pathname,
-          locationState: location.state,
         },
       })
       return

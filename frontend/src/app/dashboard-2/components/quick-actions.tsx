@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { TrendingUp, History, Star, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -13,9 +13,20 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { NewPredictionDialog } from "@/features/prediction/dialogs/new_prediction_dialog"
 
-export function QuickActions() {
-  const [open, setOpen] = useState(false)
+interface Props {
+  openDialog?: boolean
+}
+
+export function QuickActions({ openDialog = false }: Props) {
+  const [open, setOpen] = useState(openDialog)
   const navigate = useNavigate()
+
+  // Update dialog state when prop changes
+  useEffect(() => {
+    if (openDialog) {
+      setOpen(true)
+    }
+  }, [openDialog])
 
   return (
     <div className="flex items-center space-x-2">

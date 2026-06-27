@@ -45,10 +45,28 @@ export function LoginForm3({
     try {
       const user = await loginApi({ email, password })
       login(user)
-      if (user.role === "ADMIN") {
-        navigate("/admin")
+      
+      // Check if there's a pending save from before login
+      const pendingSave = localStorage.getItem("pendingSave")
+      const pendingSaveState = localStorage.getItem("pendingSaveState")
+      
+      if (pendingSave === "true" && pendingSaveState) {
+        // Don't clear the flags yet - let the prediction page handle it
+        const state = JSON.parse(pendingSaveState)
+        
+        // Navigate back to the prediction page with the saved state
+        if (user.role === "ADMIN") {
+          navigate("/admin")
+        } else {
+          navigate("/prediction/historical", { state })
+        }
       } else {
-        navigate(redirectTo, { state: redirectState })
+        // Normal navigation flow
+        if (user.role === "ADMIN") {
+          navigate("/admin")
+        } else {
+          navigate(redirectTo, { state: redirectState })
+        }
       }
     } catch (err: any) {
       setError(err.message || "Invalid email or password.")

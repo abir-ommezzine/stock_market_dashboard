@@ -87,6 +87,7 @@ public class AdminController {
                     .email(request.getEmail())
                     .password(passwordEncoder.encode(request.getPassword()))
                     .role(Role.ADMIN)
+                    .emailVerified(true)  // Admins don't need email verification
                     .build();
 
             userRepository.save(admin);

@@ -20,7 +20,7 @@ export function SiteFooter() {
             </Link>
           </div>
           <p className="text-xs text-muted-foreground">
-            Building beautiful, accessible blocks, templates and dashboards for modern web applications.
+            AI-powered stock market predictions and analysis for smarter investment decisions.
           </p>
         </div>
       </div>

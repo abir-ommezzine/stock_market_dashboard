@@ -41,8 +41,26 @@ export function VerifyEmailForm({
         const user = await verifyEmail(token)
         login(user)
         setSuccess(true)
+        
+        // Check if there's a pending save from before login
+        const pendingSave = localStorage.getItem("pendingSave")
+        const pendingSaveState = localStorage.getItem("pendingSaveState")
+        
+        console.log("After verification - pendingSave:", pendingSave)
+        console.log("After verification - pendingSaveState:", pendingSaveState)
+        
         setTimeout(() => {
-          navigate("/dashboard")
+          if (pendingSave === "true" && pendingSaveState) {
+            // Don't clear the flags yet - let the prediction page handle it
+            const state = JSON.parse(pendingSaveState)
+            console.log("Navigating to prediction page with state:", state)
+            
+            // Navigate back to the prediction page with the saved state
+            navigate("/prediction/historical", { state, replace: true })
+          } else {
+            console.log("No pending save, navigating to dashboard")
+            navigate("/dashboard")
+          }
         }, 2000)
       } catch (err: any) {
         setError(err.message || "Failed to verify email. The link may be invalid or expired.")

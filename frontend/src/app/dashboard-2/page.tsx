@@ -1,3 +1,7 @@
+"use client"
+
+import { useEffect } from "react"
+import { useSearchParams } from "react-router-dom"
 import { BaseLayout } from "@/components/layouts/base-layout"
 import { StockMetricsOverview } from "./components/stock-metrics-overview"
 import { TrendingStocks } from "./components/trending-stocks"
@@ -7,6 +11,18 @@ import { QuickActions } from "./components/quick-actions"
 import { PredictionStats } from "./components/prediction-stats"
 
 export default function Dashboard2() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const shouldOpenDialog = searchParams.get('newPrediction') === 'true'
+
+  // Clean up the URL parameter after reading it
+  useEffect(() => {
+    if (shouldOpenDialog) {
+      // Remove the parameter from URL
+      searchParams.delete('newPrediction')
+      setSearchParams(searchParams, { replace: true })
+    }
+  }, [shouldOpenDialog, searchParams, setSearchParams])
+
   return (
     <BaseLayout>
       <div className="flex-1 space-y-6 px-6 pt-0">
@@ -17,7 +33,7 @@ export default function Dashboard2() {
               Monitor stock predictions, trending stocks, and your watchlist
             </p>
           </div>
-          <QuickActions />
+          <QuickActions openDialog={shouldOpenDialog} />
         </div>
 
         <div className="@container/main space-y-6">

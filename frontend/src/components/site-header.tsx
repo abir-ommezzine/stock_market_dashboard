@@ -69,7 +69,7 @@ export function SiteHeader() {
                 variant="ghost"
                 size="sm"
                 className="hidden sm:flex dark:text-foreground"
-                onClick={() => navigate('/prediction/historical')}
+                onClick={() => navigate('/dashboard?newPrediction=true')}
               >
                 Prediction
               </Button>

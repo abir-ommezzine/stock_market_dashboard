@@ -37,7 +37,7 @@ const data = {
         },
         {
           title: "Prediction",
-          url: "/prediction/historical",
+          url: "/dashboard?newPrediction=true",
           icon: TrendingUp,
         },
         {

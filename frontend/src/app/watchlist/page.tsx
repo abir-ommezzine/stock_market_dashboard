@@ -62,12 +62,27 @@ export default function WatchlistPage() {
   const loadSymbols = async () => {
     setLoadingSymbols(true);
     try {
-      const response = await fetch('http://localhost:8083/api/datasets/1/symbols');
+      const token = localStorage.getItem('auth_token');
+      
+      // Try to get symbols from the stock search endpoint instead
+      const response = await fetch('http://localhost:8083/api/datasets/stocks/search?query=', {
+        headers: token ? {
+          'Authorization': `Bearer ${token}`
+        } : {}
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
-      setSymbols(data.filter((s: string) => s && s.trim() !== ''));
+      // Extract just the symbols from the search results
+      const symbolList = data.map((stock: { symbol: string; name: string }) => stock.symbol);
+      setSymbols(symbolList.filter((s: string) => s && s.trim() !== ''));
     } catch (error) {
       console.error('Failed to fetch symbols:', error);
       toast.error('Failed to load stock symbols');
+      setSymbols([]);
     } finally {
       setLoadingSymbols(false);
     }

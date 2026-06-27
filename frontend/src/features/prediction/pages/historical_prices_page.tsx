@@ -1,7 +1,7 @@
 "use client"
 
 import { useLocation } from "react-router-dom"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { fetchStockData } from "@/lib/api/stock.api"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { ChartAreaInteractive } from "@/components/charts/chart-area-interactive"
@@ -16,15 +16,33 @@ import { BaseLayout } from "@/components/layouts/base-layout"
 export default function HistoricalPricesPage() {
   const location = useLocation()
   const { user } = useAuth()
+  const hasSavedRef = useRef(false)
+
+  // Debug: Log what we have on mount
+  useEffect(() => {
+    console.log("=== Historical Prices Page Mounted ===")
+    console.log("Location state:", location.state)
+    console.log("localStorage pendingSave:", localStorage.getItem("pendingSave"))
+    console.log("localStorage pendingSaveState:", localStorage.getItem("pendingSaveState"))
+    console.log("User:", user)
+  }, [])
 
   // On return from sign-in, location.state may be the restored page state
-  // OR we fall back to sessionStorage if the router state was lost
+  // OR we fall back to localStorage if the router state was lost
   const resolvedState = (() => {
-    if (location.state?.company) return location.state
-    const stored = sessionStorage.getItem("pendingSaveState")
-    if (stored) {
-      try { return JSON.parse(stored) } catch { /* ignore */ }
+    if (location.state?.company) {
+      console.log("Using location.state:", location.state)
+      return location.state
     }
+    const stored = localStorage.getItem("pendingSaveState")
+    if (stored) {
+      try { 
+        const parsed = JSON.parse(stored)
+        console.log("Using localStorage state:", parsed)
+        return parsed
+      } catch { /* ignore */ }
+    }
+    console.log("No state found, using empty object")
     return {}
   })()
 
@@ -34,6 +52,8 @@ export default function HistoricalPricesPage() {
     preloadedResult,
     preloadedParams,
   } = resolvedState
+
+  console.log("Resolved state - company:", company, "datasetId:", datasetId)
 
   const [data, setData] = useState<any>(null)
   const [predictions, setPredictions] = useState<PredictionPoint[]>(
@@ -60,16 +80,43 @@ export default function HistoricalPricesPage() {
   }, [datasetId, company])
 
   // After returning from sign-in with a pending save, auto-trigger it
+  // This runs once when the component mounts with all the necessary data
   useEffect(() => {
-    const pending = sessionStorage.getItem("pendingSave")
-    if (pending === "true" && user && lastParams && lastResult) {
-      sessionStorage.removeItem("pendingSave")
-      sessionStorage.removeItem("pendingSaveState")
+    const pending = localStorage.getItem("pendingSave")
+    
+    // Only run once and only if we have all required data
+    if (
+      pending === "true" && 
+      user && 
+      company && 
+      datasetId && 
+      lastParams && 
+      lastResult &&
+      !hasSavedRef.current
+    ) {
+      hasSavedRef.current = true
+      
+      console.log("Auto-saving prediction after login/verification")
+      console.log("User ID:", user.id)
+      console.log("Company:", company)
+      console.log("Dataset ID:", datasetId)
+      
+      // Clear the flags immediately
+      localStorage.removeItem("pendingSave")
+      localStorage.removeItem("pendingSaveState")
+      
+      // Save the prediction
       savePrediction(user.id, company, datasetId, lastParams, lastResult)
-        .then(() => toast.success("Prediction saved successfully!"))
-        .catch(() => toast.error("Failed to save prediction."))
+        .then(() => {
+          console.log("Prediction saved successfully")
+          toast.success("Prediction saved successfully!")
+        })
+        .catch((err) => {
+          console.error("Failed to save prediction:", err)
+          toast.error("Failed to save prediction.")
+        })
     }
-  }, [user, lastParams, lastResult, company, datasetId])
+  }, [user, company, datasetId, lastParams, lastResult])
 
   const handlePredictionResult = async (
     newPredictions: PredictionPoint[],
@@ -83,7 +130,16 @@ export default function HistoricalPricesPage() {
     setUsedModel(modelType)
     setLastParams(usedParams)
     setLastResult(fullResult)
-    // No auto-save here — user clicks Save explicitly
+    
+    // Update localStorage with the latest prediction result
+    // Use localStorage instead of sessionStorage so it persists across tabs (email verification)
+    const stateToSave = {
+      company,
+      datasetId,
+      preloadedParams: usedParams,
+      preloadedResult: fullResult,
+    }
+    localStorage.setItem("pendingSaveState", JSON.stringify(stateToSave))
   }
 
   const handleClearPrediction = () => {

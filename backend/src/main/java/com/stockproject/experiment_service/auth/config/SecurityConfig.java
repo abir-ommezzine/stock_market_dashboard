@@ -44,16 +44,14 @@ public class SecurityConfig {
                     "/api/datasets/**",
                     "/api/stocks/**",
                     "/api/ml/**",
-                    "/api/predictions/**",
-                    "/api/watchlist/**",
-                    "/api/admin/**",
-                    "/api/chat/**",
                     "/v3/api-docs/**",
                     "/swagger-ui/**",
                     "/swagger-ui.html",
                     "/oauth2/**",
                     "/login/oauth2/**"
                 ).permitAll()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/predictions/**", "/api/watchlist/**", "/api/chat/**").authenticated()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
