@@ -1,8 +1,7 @@
-# 📈 StockAI — Stock Market Prediction Dashboard
+# 📈 StockAI : Stock Market Prediction Dashboard
 
-A full-stack web application for stock market time-series forecasting. Upload or connect a dataset, choose a forecasting model (ARIMA, ARMA, or SARIMA), tune or auto-optimize its parameters, and visualize predictions overlaid on historical prices — complete with accuracy metrics, saved experiment history, watchlists, and a built-in support chat.
+A full-stack web application for stock market time-series forecasting. Upload or connect a dataset, choose a forecasting model (ARIMA, ARMA, or SARIMA), tune or auto-optimize its parameters, and visualize predictions overlaid on historical prices, complete with accuracy metrics, saved experiment history, watchlists, and a built-in support chat.
 
-![Bloomberg-style terminal view](Bloomberg%20Terminal.png)
 
 ## Contents
 
@@ -19,15 +18,15 @@ A full-stack web application for stock market time-series forecasting. Upload or
 
 ## Features
 
-- **Authentication & authorization** — JWT-based login/registration with Spring Security, protected routes, and role-based access (`USER` / `ADMIN`).
-- **Flexible data sources** — build a dataset from a CSV upload, an external CSV URL, or live data from Yahoo Finance / Alpha Vantage.
-- **Forecasting models** — ARIMA, ARMA, and SARIMA via `statsmodels`, with either automatic parameter selection (AIC/BIC grid search) or manual `(p, d, q)` / seasonal configuration.
-- **Interactive visualization** — historical prices and forecasted values plotted together with Recharts, plus MAE, RMSE, MAPE, and R² metrics for every run.
-- **Experiment history** — save, search, filter, re-run, and delete past prediction experiments.
-- **Watchlist** — track favorite symbols.
-- **Admin dashboard** — user management and oversight.
-- **Support chat** — users message "Customer Support"; admins see and respond to every conversation, all persisted to the database.
-- **Email notifications** — account verification and notifications sent via Gmail SMTP.
+- **Authentication & authorization** : JWT-based login/registration with Spring Security, protected routes, and role-based access (`USER` / `ADMIN`).
+- **Flexible data sources** : build a dataset from a CSV upload, an external CSV URL, or live data from Yahoo Finance / Alpha Vantage.
+- **Forecasting models** : ARIMA, ARMA, and SARIMA via `statsmodels`, with either automatic parameter selection (AIC/BIC grid search) or manual `(p, d, q)` / seasonal configuration.
+- **Interactive visualization** : historical prices and forecasted values plotted together with Recharts, plus MAE, RMSE, MAPE, and R² metrics for every run.
+- **Experiment history** : save, search, filter, re-run, and delete past prediction experiments.
+- **Watchlist** : track favorite symbols.
+- **Admin dashboard** : user management and oversight.
+- **Support chat** : users message "Customer Support"; admins see and respond to every conversation, all persisted to the database.
+- **Email notifications** : account verification and notifications sent via Gmail SMTP.
 - **Dark/light theme**, responsive layout, and a component library built on shadcn/ui + Radix primitives.
 
 ## Screenshots
