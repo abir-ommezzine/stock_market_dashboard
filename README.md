@@ -2,6 +2,9 @@
 
 A full-stack web application for stock market time-series forecasting. Upload or connect a dataset, choose a forecasting model (ARIMA, ARMA, or SARIMA), tune or auto-optimize its parameters, and visualize predictions overlaid on historical prices, complete with accuracy metrics, saved experiment history, watchlists, and a built-in support chat.
 
+📺 **[Watch the Demo Video](https://drive.google.com/file/d/1HgrNuFl_AwNc77jqHnlF00GqRoY7evXx/view?usp=sharing)**
+
+![Bloomberg-style terminal view](Bloomberg%20Terminal.png)
 
 ## Contents
 
