@@ -4,8 +4,6 @@ A full-stack web application for stock market time-series forecasting. Upload or
 
 📺 **[Watch the Demo Video](https://drive.google.com/file/d/1HgrNuFl_AwNc77jqHnlF00GqRoY7evXx/view?usp=sharing)**
 
-![Bloomberg-style terminal view](Bloomberg%20Terminal.png)
-
 ## Contents
 
 - [Features](#features)
