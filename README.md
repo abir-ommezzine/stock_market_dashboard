@@ -30,6 +30,23 @@ A full-stack web application for stock market time-series forecasting. Upload or
 - **Email notifications** — account verification and notifications sent via Gmail SMTP.
 - **Dark/light theme**, responsive layout, and a component library built on shadcn/ui + Radix primitives.
 
+## Screenshots
+
+### Onboarding & Auth
+| Landing Page | Signup | Login |
+|---|---|---|
+| ![Landing Page](screenshots/landing%20page.png) | ![Signup](screenshots/signup.png) | ![Login](screenshots/login.png) |
+
+### Core Prediction Workflow
+| Data Selection | Workflow | Metrics | History |
+|---|---|---|---|
+| ![Selecting Data Source](screenshots/selecting%20data%20source.png) | ![Prediction Workflow](screenshots/prediction%20workflow.png) | ![Metrics](screenshots/metrics.png) | ![History](screenshots/history.png) |
+
+### Management & Support
+| Watchlist | Support (User) | Support (Admin) | Admin Dashboard |
+|---|---|---|---|
+| ![Watchlist](screenshots/watchlist.png) | ![Support Chat User](screenshots/support%20chat%20user.png) | ![Support Chat Admin](screenshots/support%20chat%20admin.png) | ![Admin Dashboard](screenshots/admin%20dashboard.png) |
+
 ## Architecture
 
 A 3-tier, containerized microservice setup: a React SPA talks to a Java Spring Boot API, which owns the database and proxies model-training requests to a Python FastAPI ML service.
@@ -72,7 +89,8 @@ See [Diagrams](#diagrams) below for the full class, package, sequence, and deplo
 ├── frontend/            # React + Vite SPA (feature-sliced design)
 ├── compose.yaml         # Docker Compose orchestration for all 4 services
 ├── *.puml               # PlantUML source for the architecture/sequence diagrams
-└── *.png / *.gif        # Rendered diagrams and product screenshots
+└── screenshots/           # Product screenshots
+└── *.png / *.gif        # Rendered diagrams
 ```
 
 ## Getting Started
